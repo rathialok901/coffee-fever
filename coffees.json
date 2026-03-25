@@ -58,5 +58,25 @@
     "dialInNotes": "7-3-7-4 for v60",
     "bagOpened": true,
     "image": null
+  },
+  {
+    "id": "dark-room-naturals",
+    "name": "Dark Room Naturals",
+    "roasterId": "coffeeverse",
+    "origin": "",
+    "region": "",
+    "roastLevel": "",
+    "process": "",
+    "variety": "",
+    "status": "current",
+    "dateAdded": "2026-03-25",
+    "dateFinished": null,
+    "tasteTags": [],
+    "description": "",
+    "cost": null,
+    "roastDate": null,
+    "dialInNotes": null,
+    "bagOpened": false,
+    "image": null
   }
 ]
