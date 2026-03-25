@@ -9,8 +9,14 @@
       "filter": "22–24 clicks (K-Ultra)"
     },
     "notes": "Use a slow, controlled pour and a gooseneck kettle for best results. Works beautifully with light to medium roasts.",
-    "tags": ["pour over", "filter", "manual"],
-    "image": null
+    "tags": [
+      "pour over",
+      "filter",
+      "manual"
+    ],
+    "cost": null,
+    "dateAdded": null,
+    "image": "images/gear/v60.jpg"
   },
   {
     "id": "french-press",
@@ -22,7 +28,11 @@
       "frenchPress": "38–40 clicks (K-Ultra)"
     },
     "notes": "Skim the crust at 4 minutes before plunging to dramatically reduce bitterness.",
-    "tags": ["immersion", "full body", "manual"],
+    "tags": [
+      "immersion",
+      "full body",
+      "manual"
+    ],
     "image": null
   },
   {
@@ -35,7 +45,11 @@
       "stovetop": "10–12 clicks (K-Ultra)"
     },
     "notes": "Pre-heat the water before filling the bottom chamber to avoid bitter overextraction from slow metal heating.",
-    "tags": ["stovetop", "concentrated", "pressure"],
+    "tags": [
+      "stovetop",
+      "concentrated",
+      "pressure"
+    ],
     "image": null
   },
   {
@@ -48,7 +62,12 @@
       "filter": "28–30 clicks (K-Ultra)"
     },
     "notes": "Adjust steep time (3–5 min) to taste. Very forgiving for new beans before you've fully dialled in.",
-    "tags": ["immersion", "filter", "hybrid", "manual"],
+    "tags": [
+      "immersion",
+      "filter",
+      "hybrid",
+      "manual"
+    ],
     "image": null
   },
   {
@@ -61,7 +80,12 @@
       "percolation": "5–7 clicks (K-Ultra)"
     },
     "notes": "Use a chicory blend (80:20) for authentic filter kaapi. Never rush — the slow drip is essential to the flavour.",
-    "tags": ["traditional", "filter kaapi", "slow drip", "stovetop"],
+    "tags": [
+      "traditional",
+      "filter kaapi",
+      "slow drip",
+      "stovetop"
+    ],
     "image": null
   },
   {
@@ -76,7 +100,12 @@
       "frenchPress": "38–42 clicks"
     },
     "notes": "Each full rotation of the ring = 1 click. Zero point: tighten until burrs touch, then back off to your starting click count.",
-    "tags": ["grinder", "manual", "precision", "hand grinder"],
+    "tags": [
+      "grinder",
+      "manual",
+      "precision",
+      "hand grinder"
+    ],
     "image": null
   }
 ]
