@@ -4,7 +4,7 @@
 
 // ---- CONFIG ----
 const GITHUB_OWNER  = 'rathialok901';
-const GITHUB_REPO   = 'coffee-fever-1';
+const GITHUB_REPO   = 'coffee-fever';
 const GITHUB_BRANCH = 'main';
 
 // ---- STATE ----
