@@ -1,1 +1,33 @@
-[]
+[
+  {
+    "id": "entry-1774467402352-q81r",
+    "date": "2026-03-25",
+    "coffeeId": "coorg-naturals",
+    "beanName": "Coorg Naturals",
+    "roasterId": "humble-bean",
+    "roasterName": "Humble Bean",
+    "origin": "",
+    "roastLevel": "Medium",
+    "brewMethod": "Clever Dripper",
+    "grindClicks": null,
+    "grindLabel": "",
+    "dose": "",
+    "water": "",
+    "ratio": null,
+    "waterTemp": "",
+    "totalTime": "",
+    "scores": {
+      "acidity": 3.5,
+      "body": 4,
+      "sweetness": 5,
+      "finish": 5
+    },
+    "overallRating": 4,
+    "tasteTags": [
+      "Spices",
+      "Fruity"
+    ],
+    "notes": "Cardamom, Nuts and fruits",
+    "image": null
+  }
+]
