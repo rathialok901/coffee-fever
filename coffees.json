@@ -31,6 +31,8 @@
     "dateFinished": "2026-03-23",
     "tasteTags": [],
     "description": "",
+    "cost": 750,
+    "bagOpened": false,
     "image": null
   }
 ]
