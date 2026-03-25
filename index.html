@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Grounds & Glory — A Coffee Journal</title>
+  <meta name="description" content="A personal coffee journal tracking gear, roasters, tasting notes, and brewing recipes." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+  <!-- HEADER -->
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="logo-block">
+        <span class="logo-icon">☕</span>
+        <div>
+          <h1 class="site-title">Grounds <em>&</em> Glory</h1>
+          <p class="site-tagline">A personal pursuit of the perfect cup</p>
+        </div>
+      </div>
+      <nav class="main-nav" id="mainNav">
+        <a href="#" class="nav-link active" data-section="journal">Journal</a>
+        <a href="#" class="nav-link" data-section="roasters">Roasters</a>
+        <a href="#" class="nav-link" data-section="gear">My Gear</a>
+        <a href="#" class="nav-link" data-section="recipes">Recipes</a>
+        <a href="#" class="nav-link" data-section="stats">Stats</a>
+      </nav>
+      <button class="hamburger" id="hamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- SEARCH BAR -->
+  <div class="search-bar-wrap">
+    <div class="search-bar-inner">
+      <span class="search-icon">⌕</span>
+      <input type="text" id="globalSearch" class="global-search" placeholder="Search beans, roasters, gear, notes…" />
+      <button class="search-clear" id="searchClear">✕</button>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content" id="mainContent">
+
+    <!-- ====== JOURNAL SECTION ====== -->
+    <section class="section active" id="section-journal">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">Tasting Journal</h2>
+          <p class="section-sub">Every cup, documented.</p>
+        </div>
+        <a href="https://github.com/rathialok901/coffee-fever/issues/new?template=journal_entry.yml" target="_blank" class="btn-primary">+ Log a Cup</a>
+      </div>
+
+      <!-- Filters -->
+      <div class="filter-bar">
+        <div class="filter-group">
+          <label class="filter-label">Roaster</label>
+          <select class="filter-select" id="filterRoaster"><option value="">All</option></select>
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">Roast Level</label>
+          <select class="filter-select" id="filterRoastLevel">
+            <option value="">All</option>
+            <option>Light</option><option>Medium-Light</option><option>Medium</option>
+            <option>Medium-Dark</option><option>Dark</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">Brew Method</label>
+          <select class="filter-select" id="filterMethod">
+            <option value="">All</option>
+            <option>Pour Over</option><option>French Press</option><option>Moka Pot</option>
+            <option>Clever Dripper</option><option>South Indian Filter</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">Taste Profile</label>
+          <select class="filter-select" id="filterTaste">
+            <option value="">All</option>
+            <option>Fruity / Bright</option><option>Chocolatey / Nutty</option>
+            <option>Floral / Delicate</option><option>Earthy / Smoky</option>
+            <option>Caramel / Sweet</option><option>Spicy / Complex</option>
+            <option>Citrus / Acidic</option>
+          </select>
+        </div>
+        <button class="filter-reset" id="filterReset">Reset</button>
+      </div>
+
+      <div class="journal-grid" id="journalGrid">
+        <div class="empty-state" id="journalEmpty">
+          <div class="empty-icon">📓</div>
+          <h3>No entries yet</h3>
+          <p>Your tasting journal is empty. Log your first cup via a GitHub Issue and it'll appear here automatically.</p>
+          <a href="https://github.com/rathialok901/coffee-fever/issues/new?template=journal_entry.yml" target="_blank" class="btn-primary">Log First Cup</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== ROASTERS SECTION ====== -->
+    <section class="section" id="section-roasters">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">Roasters</h2>
+          <p class="section-sub">The people behind your beans.</p>
+        </div>
+        <a href="https://github.com/rathialok901/coffee-fever/issues/new?template=add_roaster.yml" target="_blank" class="btn-primary">+ Add Roaster</a>
+      </div>
+      <div class="roaster-grid" id="roasterGrid"></div>
+    </section>
+
+    <!-- ====== GEAR SECTION ====== -->
+    <section class="section" id="section-gear">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">My Gear</h2>
+          <p class="section-sub">The tools of the craft.</p>
+        </div>
+      </div>
+      <div class="gear-grid" id="gearGrid"></div>
+    </section>
+
+    <!-- ====== RECIPES SECTION ====== -->
+    <section class="section" id="section-recipes">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">Brewing Recipes</h2>
+          <p class="section-sub">Dialled-in methods for every brewer.</p>
+        </div>
+      </div>
+      <div class="recipe-filter-bar">
+        <button class="recipe-filter-btn active" data-gear="">All</button>
+        <button class="recipe-filter-btn" data-gear="v60">V60</button>
+        <button class="recipe-filter-btn" data-gear="french-press">French Press</button>
+        <button class="recipe-filter-btn" data-gear="moka-pot">Moka Pot</button>
+        <button class="recipe-filter-btn" data-gear="clever-dripper">Clever Dripper</button>
+        <button class="recipe-filter-btn" data-gear="south-indian-filter">Filter Kaapi</button>
+      </div>
+      <div class="recipe-list" id="recipeList"></div>
+    </section>
+
+    <!-- ====== STATS SECTION ====== -->
+    <section class="section" id="section-stats">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">Stats & Dashboard</h2>
+          <p class="section-sub">Patterns in the cup.</p>
+        </div>
+      </div>
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card"><div class="stat-number" id="statTotalCups">0</div><div class="stat-label">Cups Logged</div></div>
+        <div class="stat-card"><div class="stat-number" id="statRoasters">3</div><div class="stat-label">Roasters Explored</div></div>
+        <div class="stat-card"><div class="stat-number" id="statBeans">0</div><div class="stat-label">Unique Beans</div></div>
+        <div class="stat-card"><div class="stat-number" id="statMethods">5</div><div class="stat-label">Brew Methods</div></div>
+      </div>
+      <div class="stats-charts">
+        <div class="chart-card">
+          <h3 class="chart-title">Brew Methods Used</h3>
+          <div class="bar-chart" id="chartMethods"></div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title">Taste Profiles</h3>
+          <div class="bar-chart" id="chartTastes"></div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title">Roast Levels</h3>
+          <div class="bar-chart" id="chartRoast"></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal" id="modal">
+      <button class="modal-close" id="modalClose">✕</button>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <footer class="site-footer">
+    <p>Grounds & Glory · Built by <a href="https://github.com/rathialok901" target="_blank">rathialok901</a> · <a href="https://github.com/rathialok901/coffee-fever" target="_blank">View on GitHub</a></p>
+  </footer>
+
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

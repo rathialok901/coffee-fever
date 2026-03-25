@@ -1,0 +1,56 @@
+[
+  {
+    "id": "v60",
+    "name": "Hario V60",
+    "type": "Pour Over",
+    "description": "The classic Japanese dripper. Produces a clean, bright cup that highlights origin character and delicate florals.",
+    "grind": "Medium-Fine",
+    "searchImage": "Hario V60 pour over dripper",
+    "tags": ["pour over", "filter", "manual"]
+  },
+  {
+    "id": "french-press",
+    "name": "French Press",
+    "type": "Immersion",
+    "description": "Full immersion brewing for a rich, heavy-bodied cup. Retains oils and fines for a textured, bold experience.",
+    "grind": "Coarse",
+    "searchImage": "French press coffee maker",
+    "tags": ["immersion", "full body", "manual"]
+  },
+  {
+    "id": "moka-pot",
+    "name": "Moka Pot",
+    "type": "Stovetop",
+    "description": "Italian stovetop brewer that pushes pressurised steam through coffee. Produces a concentrated, espresso-adjacent brew.",
+    "grind": "Fine",
+    "searchImage": "Bialetti Moka pot stovetop",
+    "tags": ["stovetop", "concentrated", "pressure"]
+  },
+  {
+    "id": "clever-dripper",
+    "name": "Clever Dripper",
+    "type": "Hybrid Immersion",
+    "description": "Combines immersion steeping with a pour-over filter. Forgiving and consistent — great for dialling in new beans.",
+    "grind": "Medium",
+    "searchImage": "Clever Dripper coffee brewer",
+    "tags": ["immersion", "filter", "hybrid", "manual"]
+  },
+  {
+    "id": "south-indian-filter",
+    "name": "South Indian Filter",
+    "type": "Drip / Percolation",
+    "description": "Traditional stainless steel filter that produces a slow, concentrated decoction. The soul of filter kaapi — best paired with hot milk and sugar.",
+    "grind": "Very Fine",
+    "searchImage": "South Indian coffee filter stainless steel",
+    "tags": ["traditional", "filter kaapi", "slow drip", "stovetop"]
+  },
+  {
+    "id": "1zpresso-k-ultra",
+    "name": "1Zpresso K-Ultra",
+    "type": "Hand Grinder",
+    "description": "A precision hand grinder with a 48-step external adjustment ring. Exceptionally uniform grind from espresso to coarse filter. Built like a tank.",
+    "grind": "All ranges (1–48 clicks)",
+    "searchImage": "1Zpresso K-Ultra hand grinder",
+    "tags": ["grinder", "manual", "precision", "hand grinder"]
+  }
+]

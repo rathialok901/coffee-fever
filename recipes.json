@@ -1,0 +1,98 @@
+[
+  {
+    "id": "v60-james-hoffmann",
+    "title": "V60 — The Hoffmann Method",
+    "gear": "v60",
+    "yield": "300ml",
+    "dose": "18g",
+    "water": "300ml at 94°C",
+    "ratio": "1:16.7",
+    "totalTime": "3:30",
+    "grindSize": "Medium-Fine (1Zpresso K-Ultra: 22-24 clicks)",
+    "steps": [
+      { "time": "0:00", "action": "Bloom — pour 50ml in a spiral. Swirl gently." },
+      { "time": "0:45", "action": "Pour to 150ml slowly in a circular motion." },
+      { "time": "1:15", "action": "Pour to 250ml." },
+      { "time": "1:45", "action": "Final pour to 300ml. Give a final gentle swirl." },
+      { "time": "3:30", "action": "Drawdown complete. Serve immediately." }
+    ],
+    "notes": "The swirl at the end levels the bed for an even extraction. Works beautifully with light to medium roasts.",
+    "tags": ["pour over", "filter", "light roast", "medium roast"]
+  },
+  {
+    "id": "french-press-immersion",
+    "title": "French Press — Long Steep",
+    "gear": "french-press",
+    "yield": "350ml",
+    "dose": "21g",
+    "water": "350ml at 93°C",
+    "ratio": "1:16.7",
+    "totalTime": "8:00",
+    "grindSize": "Coarse (1Zpresso K-Ultra: 38-40 clicks)",
+    "steps": [
+      { "time": "0:00", "action": "Add coffee. Pour all water. Stir briefly to saturate." },
+      { "time": "4:00", "action": "Break the crust, skim foam and floating grounds." },
+      { "time": "8:00", "action": "Plunge slowly. Pour immediately — do not let it sit." }
+    ],
+    "notes": "Skimming the crust dramatically reduces bitterness. Use freshly roasted dark or medium-dark beans for best results.",
+    "tags": ["french press", "immersion", "dark roast", "medium-dark roast"]
+  },
+  {
+    "id": "moka-pot-classic",
+    "title": "Moka Pot — Classic Stovetop",
+    "gear": "moka-pot",
+    "yield": "80ml (concentrated)",
+    "dose": "18g",
+    "water": "Fill to valve",
+    "ratio": "~1:4.5",
+    "totalTime": "5:00",
+    "grindSize": "Fine (1Zpresso K-Ultra: 10-12 clicks)",
+    "steps": [
+      { "time": "0:00", "action": "Fill bottom chamber with hot water to the pressure valve." },
+      { "time": "0:30", "action": "Add ground coffee to basket — do not tamp. Level and screw on top." },
+      { "time": "1:00", "action": "Place on medium-low heat. Keep lid open to watch." },
+      { "time": "4:00", "action": "Once coffee begins to flow golden, reduce heat to lowest." },
+      { "time": "5:00", "action": "Remove as soon as sputtering begins. Cool bottom under tap. Serve." }
+    ],
+    "notes": "Pre-heating the water prevents bitter overextraction from the metal heating slowly. Works best with dark or medium-dark roasts.",
+    "tags": ["moka pot", "stovetop", "concentrated", "dark roast"]
+  },
+  {
+    "id": "clever-dripper-recipe",
+    "title": "Clever Dripper — 4-Minute Steep",
+    "gear": "clever-dripper",
+    "yield": "300ml",
+    "dose": "20g",
+    "water": "300ml at 93°C",
+    "ratio": "1:15",
+    "totalTime": "4:30",
+    "grindSize": "Medium (1Zpresso K-Ultra: 28-30 clicks)",
+    "steps": [
+      { "time": "0:00", "action": "Rinse filter. Add coffee. Pour all water. Stir once." },
+      { "time": "4:00", "action": "Place Clever Dripper on cup to trigger valve. Let drain." },
+      { "time": "4:30", "action": "Drawdown complete. Remove dripper. Enjoy." }
+    ],
+    "notes": "The Clever is incredibly forgiving — great for trying new beans without dialling in extensively. Adjust steep time to taste.",
+    "tags": ["clever dripper", "immersion", "filter", "medium roast"]
+  },
+  {
+    "id": "south-indian-filter-kaapi",
+    "title": "South Indian Filter Kaapi",
+    "gear": "south-indian-filter",
+    "yield": "60-80ml decoction",
+    "dose": "30g (fine chicory blend or dark roast)",
+    "water": "150ml near-boiling",
+    "ratio": "1:5 (before milk)",
+    "totalTime": "20:00 (slow drip)",
+    "grindSize": "Very Fine (1Zpresso K-Ultra: 5-7 clicks)",
+    "steps": [
+      { "time": "0:00", "action": "Add finely ground coffee to upper chamber. Press the disc on top lightly." },
+      { "time": "0:30", "action": "Pour near-boiling water over the disc. Place lid." },
+      { "time": "20:00", "action": "Decoction collects in lower chamber. It should be dark and thick." },
+      { "time": "20:30", "action": "Add 30-40ml decoction to tumbler. Top with 120ml hot whole milk. Sweeten to taste." },
+      { "time": "21:00", "action": "Pour between tumbler (davara) and cup repeatedly to cool and froth." }
+    ],
+    "notes": "Authentic filter kaapi uses a coffee-chicory blend (80:20). The slow drip is key — never rush with boiling water. The davara-tumbler pour is the soul of the ritual.",
+    "tags": ["south indian", "filter kaapi", "traditional", "dark roast", "milk coffee"]
+  }
+]

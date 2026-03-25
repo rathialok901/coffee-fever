@@ -1,0 +1,38 @@
+[
+  {
+    "id": "blue-tokai",
+    "name": "Blue Tokai Coffee Roasters",
+    "location": "India (Delhi, Mumbai, Bangalore, Chennai)",
+    "country": "India",
+    "website": "https://bluetokaicoffee.com",
+    "description": "One of India's most prominent specialty roasters, Blue Tokai sources single-origin beans directly from Indian farms — Attikan, Ratnagiri, Riverdale and more. Their roasts are precise, their traceability is excellent.",
+    "logo": "Blue Tokai Coffee Roasters logo",
+    "speciality": ["Single Origin", "Indian Estates", "Direct Trade"],
+    "roastLevels": ["Light", "Medium", "Medium-Dark"],
+    "added": "2024-01-01"
+  },
+  {
+    "id": "coffeeverse",
+    "name": "Coffeeverse",
+    "location": "India",
+    "country": "India",
+    "website": "https://coffeeverse.in",
+    "description": "An Indian specialty roaster focused on highlighting the complexity of Indian and international origins. Known for experimental processing and thoughtful roast profiles.",
+    "logo": "Coffeeverse India specialty coffee roaster",
+    "speciality": ["Specialty", "Experimental", "Indian Origins"],
+    "roastLevels": ["Light", "Medium"],
+    "added": "2024-01-01"
+  },
+  {
+    "id": "humble-bean",
+    "name": "Humble Bean",
+    "location": "India",
+    "country": "India",
+    "website": "https://humblebean.in",
+    "description": "Humble Bean is a boutique Indian roaster with a philosophy of keeping it simple and letting great green coffee speak for itself. Clean, transparent, and always approachable.",
+    "logo": "Humble Bean coffee roaster India",
+    "speciality": ["Boutique", "Single Origin", "Approachable"],
+    "roastLevels": ["Light", "Medium", "Dark"],
+    "added": "2024-01-01"
+  }
+]
