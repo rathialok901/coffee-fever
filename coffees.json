@@ -34,5 +34,25 @@
     "cost": 750,
     "bagOpened": false,
     "image": null
+  },
+  {
+    "id": "amaltas-blend",
+    "name": "Amaltas Blend",
+    "roasterId": "blue-tokai",
+    "origin": "",
+    "region": "",
+    "roastLevel": "",
+    "process": "",
+    "variety": "",
+    "status": "current",
+    "dateAdded": "2026-03-25",
+    "dateFinished": null,
+    "tasteTags": [],
+    "description": "",
+    "cost": null,
+    "roastDate": null,
+    "dialInNotes": null,
+    "bagOpened": false,
+    "image": null
   }
 ]
