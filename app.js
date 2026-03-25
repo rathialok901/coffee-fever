@@ -16,8 +16,9 @@ const state = {
   coffees:  [],
   activeSection: 'journal',
   search:   '',
-  filters:  { coffee: '', roaster: '', roastLevel: '', method: '', taste: '', days: '' },
+  filters:  { coffee: '', roaster: '', roastLevel: '', method: '', taste: '', days: '7' },
   catalogStatus: 'current',
+  catalogFilters: { roaster: '', roastLevel: '', process: '' },
   recipeFilter: '',
   adminMode: false
 };
@@ -362,8 +363,7 @@ function setSection(name) {
 
 function renderSection(name) {
   if (name === 'journal')  renderJournal();
-  if (name === 'catalog')  renderCatalog();
-  if (name === 'roasters') renderRoasters();
+  if (name === 'catalog')  { populateCatalogFilters(); renderCatalog(); }
   if (name === 'gear')     renderGear();
   if (name === 'recipes')  renderRecipes();
 }
@@ -394,6 +394,18 @@ function populateFilters() {
   const existingR = Array.from(rsel.options).map(o => o.value);
   state.roasters.forEach(r => {
     if (!existingR.includes(r.id)) {
+      const opt = document.createElement('option');
+      opt.value = r.id; opt.textContent = r.name;
+      rsel.appendChild(opt);
+    }
+  });
+}
+
+function populateCatalogFilters() {
+  const rsel = $('catFilterRoaster');
+  const existing = Array.from(rsel.options).map(o => o.value);
+  state.roasters.forEach(r => {
+    if (!existing.includes(r.id)) {
       const opt = document.createElement('option');
       opt.value = r.id; opt.textContent = r.name;
       rsel.appendChild(opt);
@@ -447,12 +459,10 @@ function buildJournalCard(e) {
   div.className = 'journal-card journal-card--compact';
 
   div.innerHTML = `
-    <div class="jc-main">
-      <div class="jc-name">${highlight(e.beanName || 'Unnamed Bean', q)}</div>
-      <div class="jc-method">${e.brewMethod || '—'}</div>
-    </div>
-    <div class="jc-right">
-      ${e.overallRating ? `<div class="jc-stars">${starsHtml(e.overallRating)}</div>` : '<div class="jc-stars"></div>'}
+    <div class="jc-name">${highlight(e.beanName || 'Unnamed Bean', q)}</div>
+    <div class="jc-method">${e.brewMethod || '—'}</div>
+    <div class="jc-footer">
+      <div class="jc-stars">${e.overallRating ? starsHtml(e.overallRating) : ''}</div>
       <div class="jc-date">${formatDate(e.date)}</div>
     </div>
   `;
@@ -543,8 +553,15 @@ function renderCatalog() {
   const grid = $('catalogGrid');
   const empty = $('catalogEmpty');
   const q = state.search.toLowerCase();
+  const { roaster, roastLevel, process } = state.catalogFilters;
+  // When roaster filter is active, show all statuses; otherwise respect tab
+  const statusFilter = roaster ? '' : state.catalogStatus;
+
   const filtered = state.coffees.filter(c => {
-    if (c.status !== state.catalogStatus) return false;
+    if (statusFilter && c.status !== statusFilter)               return false;
+    if (roaster    && c.roasterId !== roaster)                   return false;
+    if (roastLevel && c.roastLevel !== roastLevel)               return false;
+    if (process    && c.process !== process)                     return false;
     if (q) {
       const blob = [c.name, c.origin, c.region, c.process, c.variety, c.roastLevel,
                     ...(c.tasteTags||[])].join(' ').toLowerCase();
@@ -557,9 +574,9 @@ function renderCatalog() {
 
   if (filtered.length === 0) {
     empty.style.display = 'block';
-    empty.querySelector('p').textContent = q
-      ? 'No coffees match your search.'
-      : `No ${state.catalogStatus === 'current' ? 'in-stock' : 'past'} coffees yet. ${state.adminMode ? 'Add one above.' : 'Check back later.'}`;
+    empty.querySelector('p').textContent = (q || roaster || roastLevel || process)
+      ? 'No coffees match your filters.'
+      : `No ${statusFilter === 'current' ? 'in-stock' : statusFilter === 'past' ? 'past' : ''} coffees yet. ${state.adminMode ? 'Add one above.' : 'Check back later.'}`;
     return;
   }
   empty.style.display = 'none';
@@ -1670,6 +1687,28 @@ document.addEventListener('DOMContentLoaded', () => {
     Object.keys(filterMap).forEach(id => $(id).value = '');
     state.filters = { coffee: '', roaster: '', roastLevel: '', method: '', taste: '', days: '' };
     renderJournal();
+  });
+
+  // Set default period filter to last 7 days
+  $('filterDays').value = state.filters.days;
+
+  // Catalog filters
+  const catFilterMap = {
+    catFilterRoaster:    'roaster',
+    catFilterRoastLevel: 'roastLevel',
+    catFilterProcess:    'process'
+  };
+  Object.entries(catFilterMap).forEach(([id, key]) => {
+    $(id).addEventListener('change', (e) => {
+      state.catalogFilters[key] = e.target.value;
+      renderCatalog();
+    });
+  });
+
+  $('catFilterReset').addEventListener('click', () => {
+    Object.keys(catFilterMap).forEach(id => $(id).value = '');
+    state.catalogFilters = { roaster: '', roastLevel: '', process: '' };
+    renderCatalog();
   });
 
   // Catalog tabs
