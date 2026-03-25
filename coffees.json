@@ -1,1 +1,18 @@
-[]
+[
+  {
+    "id": "coorg-naturals",
+    "name": "Coorg Naturals",
+    "roasterId": "humble-bean",
+    "origin": "",
+    "region": "",
+    "roastLevel": "",
+    "process": "",
+    "variety": "",
+    "status": "current",
+    "dateAdded": "2026-03-25",
+    "dateFinished": null,
+    "tasteTags": [],
+    "description": "",
+    "image": null
+  }
+]
