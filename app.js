@@ -16,7 +16,7 @@ const state = {
   coffees:  [],
   activeSection: 'journal',
   search:   '',
-  filters:  { coffee: '', roaster: '', roastLevel: '', method: '', taste: '' },
+  filters:  { coffee: '', roaster: '', roastLevel: '', method: '', taste: '', days: '' },
   catalogStatus: 'current',
   recipeFilter: '',
   adminMode: false
@@ -404,13 +404,15 @@ function populateFilters() {
 // ---- SECTION: JOURNAL ----
 function getFilteredJournal() {
   const q = state.search.toLowerCase();
-  const { coffee, roaster, roastLevel, method, taste } = state.filters;
+  const { coffee, roaster, roastLevel, method, taste, days } = state.filters;
+  const cutoff = days ? Date.now() - parseInt(days) * 86400000 : null;
   return state.journal.filter(e => {
-    if (coffee    && e.coffeeId !== coffee)                                           return false;
-    if (roaster   && e.roasterId !== roaster)                                         return false;
-    if (roastLevel && e.roastLevel !== roastLevel)                                    return false;
-    if (method    && e.brewMethod !== method)                                         return false;
+    if (coffee    && e.coffeeId !== coffee)                                                         return false;
+    if (roaster   && e.roasterId !== roaster)                                                       return false;
+    if (roastLevel && e.roastLevel !== roastLevel)                                                  return false;
+    if (method    && e.brewMethod !== method)                                                       return false;
     if (taste     && !(e.tasteTags || []).some(t => t.toLowerCase().includes(taste.toLowerCase()))) return false;
+    if (cutoff    && e.date && new Date(e.date + 'T00:00:00').getTime() < cutoff)                   return false;
     if (q) {
       const blob = [e.beanName, e.roasterName, e.origin, e.brewMethod, e.notes,
                     ...(e.tasteTags || [])].join(' ').toLowerCase();
@@ -442,51 +444,16 @@ function renderJournal() {
 function buildJournalCard(e) {
   const q = state.search;
   const div = document.createElement('div');
-  div.className = 'journal-card';
-
-  const scores = e.scores || {};
-  const coffee = e.coffeeId ? state.coffees.find(c => c.id === e.coffeeId) : null;
-  const imgPath = e.image || (coffee && coffee.image) || null;
+  div.className = 'journal-card journal-card--compact';
 
   div.innerHTML = `
-    ${buildCardImage(imgPath, e.beanName || 'Brew')}
-    <div class="journal-card-header">
-      <div>
-        <div class="journal-card-bean">${highlight(e.beanName || 'Unnamed Bean', q)}</div>
-        <div class="journal-card-roaster">${highlight(e.roasterName || '', q)}</div>
-      </div>
-      <span class="roast-badge">${e.roastLevel || '—'}</span>
+    <div class="jc-main">
+      <div class="jc-name">${highlight(e.beanName || 'Unnamed Bean', q)}</div>
+      <div class="jc-method">${e.brewMethod || '—'}</div>
     </div>
-    <div class="journal-card-body">
-      <div class="journal-meta">
-        ${e.origin ? `<span class="meta-chip">📍 ${highlight(e.origin, q)}</span>` : ''}
-        ${e.brewMethod ? `<span class="meta-chip">☕ ${e.brewMethod}</span>` : ''}
-        ${e.grindClicks ? `<span class="meta-chip">⚙️ ${e.grindClicks} clicks</span>` :
-          (e.grindLabel ? `<span class="meta-chip">⚙️ ${e.grindLabel}</span>` : '')}
-        ${e.dose ? `<span class="meta-chip">⚖️ ${e.dose}</span>` : ''}
-      </div>
-      ${Object.keys(scores).length ? `
-        <div class="journal-scores">
-          ${['acidity','body','sweetness','finish'].map(s => `
-            <div class="score-item">
-              <div class="score-label">${s}</div>
-              <div class="score-bar-wrap"><div class="score-bar" style="width:${(scores[s]||0)*10}%"></div></div>
-              <div class="score-num">${scores[s] ?? '—'}</div>
-            </div>
-          `).join('')}
-        </div>
-      ` : ''}
-      ${e.notes ? `<div class="journal-notes">${highlight(e.notes, q)}</div>` : ''}
-      <div class="journal-tags">
-        ${(e.tasteTags||[]).map(t => `<span class="taste-tag ${getTasteClass(t)}">${t}</span>`).join('')}
-      </div>
-    </div>
-    <div class="journal-card-footer">
-      <span class="journal-date">${formatDate(e.date)}</span>
-      <div style="display:flex;align-items:center;gap:0.5rem;">
-        ${e.overallRating ? `<span class="star-rating">${starsHtml(e.overallRating)}</span>` : ''}
-        <span class="journal-method-badge">${e.brewMethod || '—'}</span>
-      </div>
+    <div class="jc-right">
+      ${e.overallRating ? `<div class="jc-stars">${starsHtml(e.overallRating)}</div>` : '<div class="jc-stars"></div>'}
+      <div class="jc-date">${formatDate(e.date)}</div>
     </div>
   `;
 
@@ -1689,7 +1656,8 @@ document.addEventListener('DOMContentLoaded', () => {
     filterRoaster:    'roaster',
     filterRoastLevel: 'roastLevel',
     filterMethod:     'method',
-    filterTaste:      'taste'
+    filterTaste:      'taste',
+    filterDays:       'days'
   };
   Object.entries(filterMap).forEach(([id, key]) => {
     $(id).addEventListener('change', (e) => {
@@ -1700,7 +1668,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   $('filterReset').addEventListener('click', () => {
     Object.keys(filterMap).forEach(id => $(id).value = '');
-    state.filters = { coffee: '', roaster: '', roastLevel: '', method: '', taste: '' };
+    state.filters = { coffee: '', roaster: '', roastLevel: '', method: '', taste: '', days: '' };
     renderJournal();
   });
 
