@@ -52,7 +52,7 @@
     "cost": null,
     "roastDate": null,
     "dialInNotes": null,
-    "bagOpened": false,
+    "bagOpened": true,
     "image": null
   }
 ]
