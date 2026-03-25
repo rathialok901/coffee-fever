@@ -132,28 +132,27 @@ async function writeDataFile(filename, updatedData, commitMessage) {
     Accept: 'application/vnd.github+json'
   };
 
-  // Step 1: Get current SHA
+  // Step 1: Get current SHA (null if file doesn't exist yet)
   const getRes = await fetch(url, { headers });
-  if (!getRes.ok) {
-    if (getRes.status === 401) throw new Error('GitHub token invalid or expired');
-    throw new Error(`Failed to read ${filename}: HTTP ${getRes.status}`);
+  if (!getRes.ok && getRes.status === 401) throw new Error('GitHub token invalid or expired');
+  let sha = null;
+  if (getRes.ok) {
+    const current = await getRes.json();
+    sha = current.sha || null;
   }
-  const current = await getRes.json();
 
   // Step 2: Encode updated JSON content
   const jsonStr = JSON.stringify(updatedData, null, 2);
   const content = btoa(unescape(encodeURIComponent(jsonStr)));
 
-  // Step 3: PUT updated file
+  // Step 3: PUT updated file (omit sha for new files)
+  const body = { message: commitMessage, content, branch: GITHUB_BRANCH };
+  if (sha) body.sha = sha;
+
   const putRes = await fetch(url, {
     method: 'PUT',
     headers,
-    body: JSON.stringify({
-      message: commitMessage,
-      content,
-      sha: current.sha,
-      branch: GITHUB_BRANCH
-    })
+    body: JSON.stringify(body)
   });
 
   if (!putRes.ok) {
