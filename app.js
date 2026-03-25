@@ -5,6 +5,14 @@
 // ---- CONFIG ----
 const GITHUB_OWNER  = 'rathialok901';
 const CURRENCY      = '₹';
+const GEAR_TO_METHOD = {
+  'v60':                'V60 / Pour Over',
+  'french-press':       'French Press',
+  'moka-pot':           'Moka Pot',
+  'clever-dripper':     'Clever Dripper',
+  'south-indian-filter':'South Indian Filter',
+  'espresso':           'Basic Home Espresso'
+};
 const GITHUB_REPO   = 'coffee-fever';
 const GITHUB_BRANCH = 'main';
 
@@ -549,6 +557,11 @@ function openJournalModal(e) {
       </div>
     ` : ''}
 
+    ${(() => { const rec = e.recipeId ? state.recipes.find(r => r.id === e.recipeId) : null;
+      return rec ? `<p style="margin-top:1rem;font-size:0.85rem;color:var(--text-muted);">
+        📋 Recipe: <a href="#" style="color:var(--accent);text-decoration:none;" onclick="closeModal();setTimeout(()=>setSection('recipes'),200)">${rec.title}</a></p>` : '';
+    })()}
+
     ${state.adminMode ? `
       <div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);">
         <button class="btn-secondary" onclick="openJournalForm(window._modalEntry)">✏️ Edit Entry</button>
@@ -963,6 +976,8 @@ function openGearModal(g) {
 function renderRecipes() {
   const list = $('recipeList');
   list.innerHTML = '';
+  window._recipes = {};
+  state.recipes.forEach(r => { window._recipes[r.id] = r; });
   const q = state.search.toLowerCase();
   const filtered = state.recipes.filter(r => {
     if (state.recipeFilter && r.gear !== state.recipeFilter) return false;
@@ -987,13 +1002,16 @@ function renderRecipes() {
         <div>
           <div class="recipe-title">${recipe.title}</div>
           <div class="recipe-meta-row">
-            <span class="recipe-meta-item"><strong>${recipe.dose}</strong> coffee</span>
-            <span class="recipe-meta-item"><strong>${recipe.water}</strong></span>
-            <span class="recipe-meta-item"><strong>${recipe.ratio}</strong> ratio</span>
-            <span class="recipe-meta-item"><strong>${recipe.totalTime}</strong></span>
+            ${recipe.dose ? `<span class="recipe-meta-item"><strong>${recipe.dose}</strong> coffee</span>` : ''}
+            ${recipe.water ? `<span class="recipe-meta-item"><strong>${recipe.water}</strong></span>` : ''}
+            ${recipe.ratio ? `<span class="recipe-meta-item"><strong>${recipe.ratio}</strong> ratio</span>` : ''}
+            ${recipe.totalTime ? `<span class="recipe-meta-item"><strong>${recipe.totalTime}</strong></span>` : ''}
           </div>
         </div>
-        <span class="recipe-toggle">▼</span>
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+          ${state.adminMode ? `<button class="btn-secondary" style="font-size:0.75rem;padding:0.25rem 0.6rem;" onclick="event.stopPropagation();openRecipeForm(window._recipes['${recipe.id}'])">✏️</button>` : ''}
+          <span class="recipe-toggle">▼</span>
+        </div>
       </div>
       <div class="recipe-card-body">
         <div class="recipe-info-grid">
@@ -1039,8 +1057,9 @@ function closeModal() {
 function openJournalForm(existing = null) {
   const isEdit = !!existing;
   const e = existing || {};
-  const coffeeOptions = state.coffees.map(c => `<option value="${c.id}" ${e.coffeeId === c.id ? 'selected' : ''}>${c.name}</option>`).join('');
+  const coffeeOptions  = state.coffees.map(c => `<option value="${c.id}" ${e.coffeeId === c.id ? 'selected' : ''}>${c.name}</option>`).join('');
   const roasterOptions = state.roasters.map(r => `<option value="${r.id}" ${e.roasterId === r.id ? 'selected' : ''}>${r.name}</option>`).join('');
+  const recipeOptions  = state.recipes.map(r => `<option value="${r.id}" ${e.recipeId === r.id ? 'selected' : ''}>${r.title}</option>`).join('');
   const scores = e.scores || {};
   const rating = e.overallRating || 0;
 
@@ -1063,12 +1082,21 @@ function openJournalForm(existing = null) {
           </select>
         </div>
       </div>
-      <div class="form-field">
-        <label class="form-label">Coffee (from catalog)</label>
-        <select class="form-select" id="jCoffeeId" onchange="handleJournalCoffeeSelect(this.value)">
-          <option value="">— Select or type manually —</option>
-          ${coffeeOptions}
-        </select>
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label">Recipe Used (optional)</label>
+          <select class="form-select" id="jRecipeId" onchange="handleJournalRecipeSelect(this.value)">
+            <option value="">— Link a recipe —</option>
+            ${recipeOptions}
+          </select>
+        </div>
+        <div class="form-field">
+          <label class="form-label">Coffee (from catalog)</label>
+          <select class="form-select" id="jCoffeeId" onchange="handleJournalCoffeeSelect(this.value)">
+            <option value="">— Select or type manually —</option>
+            ${coffeeOptions}
+          </select>
+        </div>
       </div>
       <div class="form-row">
         <div class="form-field">
@@ -1200,6 +1228,36 @@ function handleJournalRoasterSelect(roasterId) {
   // No auto-fill needed; just for data integrity
 }
 
+function handleJournalRecipeSelect(recipeId) {
+  if (!recipeId) return;
+  const recipe = state.recipes.find(r => r.id === recipeId);
+  if (!recipe) return;
+
+  const method = GEAR_TO_METHOD[recipe.gear];
+  if (method && $('jMethod')) $('jMethod').value = method;
+  if (recipe.dose)      $('jDose').value      = recipe.dose;
+  if (recipe.totalTime) $('jTotalTime').value  = recipe.totalTime;
+
+  if (recipe.water) {
+    const waterMatch = recipe.water.match(/^(.+?)\s+at\s+(.+)$/);
+    if (waterMatch) {
+      $('jWater').value     = waterMatch[1].trim();
+      $('jWaterTemp').value = waterMatch[2].trim();
+    } else {
+      $('jWater').value = recipe.water;
+    }
+  }
+
+  if (recipe.grindSize) {
+    const clicksMatch = recipe.grindSize.match(/(\d+)[–\-–](\d+)\s*clicks/);
+    if (clicksMatch) {
+      $('jGrindClicks').value = Math.round((parseInt(clicksMatch[1]) + parseInt(clicksMatch[2])) / 2);
+    }
+    const labelMatch = recipe.grindSize.match(/^([^(]+)/);
+    if (labelMatch) $('jGrindLabel').value = labelMatch[1].trim();
+  }
+}
+
 async function saveJournalEntry(existingId) {
   const beanName = $('jBeanName').value.trim();
   const method   = $('jMethod').value;
@@ -1238,7 +1296,8 @@ async function saveJournalEntry(existingId) {
     const entry = {
       id: existingId || generateId('entry'),
       date,
-      coffeeId: $('jCoffeeId').value || null,
+      coffeeId:  $('jCoffeeId').value  || null,
+      recipeId:  $('jRecipeId').value  || null,
       beanName,
       roasterId:   roasterId || null,
       roasterName: roasterName || $('jBeanName').value, // fallback
@@ -1707,6 +1766,136 @@ function previewFormImage(input, previewId, uploadId) {
   reader.readAsDataURL(file);
 }
 
+// ---- RECIPE FORM ----
+function openRecipeForm(existing = null) {
+  const isEdit = !!existing;
+  const r = existing || {};
+  const steps = r.steps && r.steps.length ? r.steps : [{time:'0:00',action:''},{time:'',action:''},{time:'',action:''}];
+
+  $('modalBody').innerHTML = `
+    <h2 style="font-family:var(--font-display);font-size:1.5rem;color:var(--text);margin-bottom:1.5rem;">
+      ${isEdit ? 'Edit Recipe' : 'Add Recipe'}
+    </h2>
+    <div class="admin-form">
+      <div class="form-row">
+        <div class="form-field" style="flex:2;">
+          <label class="form-label">Title <span>*</span></label>
+          <input class="form-input" type="text" id="rTitle" placeholder="e.g. My V60 Recipe" value="${r.title||''}" />
+        </div>
+        <div class="form-field">
+          <label class="form-label">Brew Method</label>
+          <select class="form-select" id="rGear">
+            <option value="">Select…</option>
+            ${Object.entries(GEAR_TO_METHOD).map(([k,v]) => `<option value="${k}" ${r.gear===k?'selected':''}>${v}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field"><label class="form-label">Dose</label>
+          <input class="form-input" type="text" id="rDose" placeholder="e.g. 18g" value="${r.dose||''}" /></div>
+        <div class="form-field"><label class="form-label">Water</label>
+          <input class="form-input" type="text" id="rWater" placeholder="e.g. 300ml at 94°C" value="${r.water||''}" /></div>
+      </div>
+      <div class="form-row">
+        <div class="form-field"><label class="form-label">Ratio</label>
+          <input class="form-input" type="text" id="rRatio" placeholder="e.g. 1:16.7" value="${r.ratio||''}" /></div>
+        <div class="form-field"><label class="form-label">Total Time</label>
+          <input class="form-input" type="text" id="rTotalTime" placeholder="e.g. 3:30" value="${r.totalTime||''}" /></div>
+      </div>
+      <div class="form-row">
+        <div class="form-field"><label class="form-label">Yield</label>
+          <input class="form-input" type="text" id="rYield" placeholder="e.g. 300ml" value="${r.yield||''}" /></div>
+        <div class="form-field"><label class="form-label">Grind Size</label>
+          <input class="form-input" type="text" id="rGrindSize" placeholder="e.g. Medium-Fine (22–24 clicks)" value="${r.grindSize||''}" /></div>
+      </div>
+
+      <div class="form-field">
+        <label class="form-label">Steps</label>
+        <div id="rStepsContainer">
+          ${steps.map(s => `
+            <div class="recipe-step-row">
+              <input class="form-input step-time-input" type="text" placeholder="0:00" value="${s.time||''}" data-time />
+              <input class="form-input step-action-input" type="text" placeholder="Describe this step…" value="${s.action||''}" data-action />
+              <button type="button" class="recipe-step-remove" onclick="this.closest('.recipe-step-row').remove()">×</button>
+            </div>
+          `).join('')}
+        </div>
+        <button type="button" class="btn-secondary" style="margin-top:0.5rem;font-size:0.8rem;" onclick="addRecipeStep()">+ Add Step</button>
+      </div>
+
+      <div class="form-field">
+        <label class="form-label">Notes</label>
+        <textarea class="form-textarea" id="rNotes" placeholder="Tips, adjustments, what makes this recipe work…" style="min-height:70px;">${r.notes||''}</textarea>
+      </div>
+      <div class="form-actions">
+        <div class="form-saving" id="recipeSaving" style="display:none;">☕ Saving…</div>
+        <button class="btn-secondary" type="button" onclick="closeModal()">Cancel</button>
+        <button class="btn-primary" type="button" onclick="saveRecipe('${isEdit ? r.id : ''}')">
+          ${isEdit ? 'Save Changes' : 'Add Recipe'}
+        </button>
+      </div>
+    </div>
+  `;
+  $('modalOverlay').classList.add('active');
+}
+
+function addRecipeStep() {
+  const container = $('rStepsContainer');
+  if (!container) return;
+  const row = document.createElement('div');
+  row.className = 'recipe-step-row';
+  row.innerHTML = `
+    <input class="form-input step-time-input" type="text" placeholder="0:00" data-time />
+    <input class="form-input step-action-input" type="text" placeholder="Describe this step…" data-action />
+    <button type="button" class="recipe-step-remove" onclick="this.closest('.recipe-step-row').remove()">×</button>
+  `;
+  container.appendChild(row);
+  row.querySelector('[data-action]').focus();
+}
+
+async function saveRecipe(existingId) {
+  const title = $('rTitle').value.trim();
+  if (!title) { showToast('Please enter a recipe title', 'error'); return; }
+
+  const steps = Array.from(document.querySelectorAll('.recipe-step-row'))
+    .map(row => ({
+      time:   row.querySelector('[data-time]').value.trim(),
+      action: row.querySelector('[data-action]').value.trim()
+    }))
+    .filter(s => s.action);
+
+  const recipe = {
+    id:        existingId || slugify(title),
+    title,
+    gear:      $('rGear').value,
+    yield:     $('rYield').value.trim(),
+    dose:      $('rDose').value.trim(),
+    water:     $('rWater').value.trim(),
+    ratio:     $('rRatio').value.trim(),
+    totalTime: $('rTotalTime').value.trim(),
+    grindSize: $('rGrindSize').value.trim(),
+    steps,
+    notes:     $('rNotes').value.trim(),
+    tags:      existingId ? (state.recipes.find(r => r.id === existingId)?.tags || []) : []
+  };
+
+  $('recipeSaving').style.display = 'flex';
+  try {
+    const updated = existingId
+      ? state.recipes.map(r => r.id === existingId ? recipe : r)
+      : [...state.recipes, recipe];
+    await writeDataFile('recipes.json', updated,
+      `📋 ${existingId ? 'Update' : 'Add'} recipe: ${title}`);
+    state.recipes = updated;
+    closeModal();
+    renderRecipes();
+    showToast(existingId ? 'Recipe updated' : 'Recipe added!', 'success');
+  } catch (err) {
+    $('recipeSaving').style.display = 'none';
+    showToast(err.message, 'error');
+  }
+}
+
 // ---- SECTION: SPEND ----
 function renderSpend() {
   const content = $('spendContent');
@@ -1940,4 +2129,5 @@ document.addEventListener('DOMContentLoaded', () => {
   $('addJournalBtn').addEventListener('click', () => openJournalForm());
   $('addCoffeeBtn').addEventListener('click',  () => openCoffeeForm());
   $('addGearBtn').addEventListener('click',    () => openGearForm());
+  $('addRecipeBtn').addEventListener('click',  () => openRecipeForm());
 });
