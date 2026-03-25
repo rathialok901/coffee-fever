@@ -8,7 +8,7 @@
     "water": "300ml at 94°C",
     "ratio": "1:16.7",
     "totalTime": "3:30",
-    "grindSize": "Medium-Fine (1Zpresso K-Ultra: 22-24 clicks)",
+    "grindSize": "Medium-Fine (1Zpresso K-Ultra: 22–24 clicks)",
     "steps": [
       { "time": "0:00", "action": "Bloom — pour 50ml in a spiral. Swirl gently." },
       { "time": "0:45", "action": "Pour to 150ml slowly in a circular motion." },
@@ -28,7 +28,7 @@
     "water": "350ml at 93°C",
     "ratio": "1:16.7",
     "totalTime": "8:00",
-    "grindSize": "Coarse (1Zpresso K-Ultra: 38-40 clicks)",
+    "grindSize": "Coarse (1Zpresso K-Ultra: 38–40 clicks)",
     "steps": [
       { "time": "0:00", "action": "Add coffee. Pour all water. Stir briefly to saturate." },
       { "time": "4:00", "action": "Break the crust, skim foam and floating grounds." },
@@ -46,7 +46,7 @@
     "water": "Fill to valve",
     "ratio": "~1:4.5",
     "totalTime": "5:00",
-    "grindSize": "Fine (1Zpresso K-Ultra: 10-12 clicks)",
+    "grindSize": "Fine (1Zpresso K-Ultra: 10–12 clicks)",
     "steps": [
       { "time": "0:00", "action": "Fill bottom chamber with hot water to the pressure valve." },
       { "time": "0:30", "action": "Add ground coffee to basket — do not tamp. Level and screw on top." },
@@ -66,7 +66,7 @@
     "water": "300ml at 93°C",
     "ratio": "1:15",
     "totalTime": "4:30",
-    "grindSize": "Medium (1Zpresso K-Ultra: 28-30 clicks)",
+    "grindSize": "Medium (1Zpresso K-Ultra: 28–30 clicks)",
     "steps": [
       { "time": "0:00", "action": "Rinse filter. Add coffee. Pour all water. Stir once." },
       { "time": "4:00", "action": "Place Clever Dripper on cup to trigger valve. Let drain." },
@@ -79,20 +79,40 @@
     "id": "south-indian-filter-kaapi",
     "title": "South Indian Filter Kaapi",
     "gear": "south-indian-filter",
-    "yield": "60-80ml decoction",
+    "yield": "60–80ml decoction",
     "dose": "30g (fine chicory blend or dark roast)",
     "water": "150ml near-boiling",
     "ratio": "1:5 (before milk)",
     "totalTime": "20:00 (slow drip)",
-    "grindSize": "Very Fine (1Zpresso K-Ultra: 5-7 clicks)",
+    "grindSize": "Very Fine (1Zpresso K-Ultra: 5–7 clicks)",
     "steps": [
       { "time": "0:00", "action": "Add finely ground coffee to upper chamber. Press the disc on top lightly." },
       { "time": "0:30", "action": "Pour near-boiling water over the disc. Place lid." },
       { "time": "20:00", "action": "Decoction collects in lower chamber. It should be dark and thick." },
-      { "time": "20:30", "action": "Add 30-40ml decoction to tumbler. Top with 120ml hot whole milk. Sweeten to taste." },
+      { "time": "20:30", "action": "Add 30–40ml decoction to tumbler. Top with 120ml hot whole milk. Sweeten to taste." },
       { "time": "21:00", "action": "Pour between tumbler (davara) and cup repeatedly to cool and froth." }
     ],
     "notes": "Authentic filter kaapi uses a coffee-chicory blend (80:20). The slow drip is key — never rush with boiling water. The davara-tumbler pour is the soul of the ritual.",
     "tags": ["south indian", "filter kaapi", "traditional", "dark roast", "milk coffee"]
+  },
+  {
+    "id": "basic-home-espresso",
+    "title": "Basic Home Espresso",
+    "gear": "espresso",
+    "yield": "30ml",
+    "dose": "9g",
+    "water": "~60ml in basket",
+    "ratio": "1:2 (ristretto to lungo)",
+    "totalTime": "25–30 sec",
+    "grindSize": "Fine (1Zpresso K-Ultra: 8–10 clicks)",
+    "steps": [
+      { "time": "0:00", "action": "Dose and distribute 9g of finely ground coffee into the portafilter basket." },
+      { "time": "0:10", "action": "Tamp firmly and evenly with ~15kg pressure. Wipe the rim clean." },
+      { "time": "0:20", "action": "Lock portafilter into machine. Start shot immediately." },
+      { "time": "0:25", "action": "First drops should appear within 5–8 seconds. Watch the pour." },
+      { "time": "0:55", "action": "Stop extraction when you reach your target weight (18–20g yield for a 9g dose)." }
+    ],
+    "notes": "Adjust grind finer if the shot runs faster than 25 sec, coarser if slower than 35 sec. Dark and medium-dark roasts perform best. Flush grouphead before each shot.",
+    "tags": ["espresso", "concentrated", "dark roast", "medium-dark roast"]
   }
 ]

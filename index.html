@@ -3,34 +3,38 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Grounds & Glory — A Coffee Journal</title>
-  <meta name="description" content="A personal coffee journal tracking gear, roasters, tasting notes, and brewing recipes." />
+  <title>Coffee Fever — A Personal Coffee Journal</title>
+  <meta name="description" content="A personal coffee journal tracking brews, beans, roasters, gear, and recipes." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+
   <!-- HEADER -->
   <header class="site-header">
     <div class="header-inner">
       <div class="logo-block">
         <span class="logo-icon">☕</span>
         <div>
-          <h1 class="site-title">Grounds <em>&</em> Glory</h1>
+          <h1 class="site-title">Coffee <em>Fever</em></h1>
           <p class="site-tagline">A personal pursuit of the perfect cup</p>
         </div>
       </div>
       <nav class="main-nav" id="mainNav">
         <a href="#" class="nav-link active" data-section="journal">Journal</a>
+        <a href="#" class="nav-link" data-section="catalog">Catalog</a>
         <a href="#" class="nav-link" data-section="roasters">Roasters</a>
-        <a href="#" class="nav-link" data-section="gear">My Gear</a>
+        <a href="#" class="nav-link" data-section="gear">Gear</a>
         <a href="#" class="nav-link" data-section="recipes">Recipes</a>
-        <a href="#" class="nav-link" data-section="stats">Stats</a>
       </nav>
-      <button class="hamburger" id="hamburger" aria-label="Menu">
-        <span></span><span></span><span></span>
-      </button>
+      <div class="header-actions">
+        <button class="admin-lock-btn" id="adminLockBtn" aria-label="Admin panel" title="Admin">🔒</button>
+        <button class="hamburger" id="hamburger" aria-label="Menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
     </div>
   </header>
 
@@ -38,8 +42,13 @@
   <div class="search-bar-wrap">
     <div class="search-bar-inner">
       <span class="search-icon">⌕</span>
-      <input type="text" id="globalSearch" class="global-search" placeholder="Search beans, roasters, gear, notes…" />
-      <button class="search-clear" id="searchClear">✕</button>
+      <input type="text" id="globalSearch" class="global-search" placeholder="Search beans, roasters, origins, notes…" autocomplete="off" />
+      <button class="search-clear" id="searchClear" aria-label="Clear search">✕</button>
+    </div>
+    <!-- Admin mode badge — shown when admin is active -->
+    <div class="admin-badge" id="adminBadge" style="display:none;">
+      <span>🔓 Admin Mode</span>
+      <button class="admin-badge-lock" id="adminBadgeLock">Lock</button>
     </div>
   </div>
 
@@ -48,24 +57,49 @@
 
     <!-- ====== JOURNAL SECTION ====== -->
     <section class="section active" id="section-journal">
+
+      <!-- Stat Strip -->
+      <div class="stat-strip" id="statStrip">
+        <div class="stat-strip-item">
+          <div class="stat-strip-num" id="statCups">0</div>
+          <div class="stat-strip-label">Cups Logged</div>
+        </div>
+        <div class="stat-strip-item">
+          <div class="stat-strip-num" id="statBeans">0</div>
+          <div class="stat-strip-label">Unique Beans</div>
+        </div>
+        <div class="stat-strip-item">
+          <div class="stat-strip-num" id="statRoasters">0</div>
+          <div class="stat-strip-label">Roasters</div>
+        </div>
+        <div class="stat-strip-item">
+          <div class="stat-strip-num" id="statMethods">0</div>
+          <div class="stat-strip-label">Brew Methods</div>
+        </div>
+      </div>
+
       <div class="section-header">
         <div>
           <h2 class="section-title">Tasting Journal</h2>
           <p class="section-sub">Every cup, documented.</p>
         </div>
-        <a href="https://github.com/rathialok901/coffee-fever/issues/new?template=journal_entry.yml" target="_blank" class="btn-primary">+ Log a Cup</a>
+        <button class="btn-primary admin-only" id="addJournalBtn" style="display:none;">+ Log a Cup</button>
       </div>
 
       <!-- Filters -->
       <div class="filter-bar">
         <div class="filter-group">
+          <label class="filter-label">Coffee</label>
+          <select class="filter-select" id="filterCoffee"><option value="">All Coffees</option></select>
+        </div>
+        <div class="filter-group">
           <label class="filter-label">Roaster</label>
-          <select class="filter-select" id="filterRoaster"><option value="">All</option></select>
+          <select class="filter-select" id="filterRoaster"><option value="">All Roasters</option></select>
         </div>
         <div class="filter-group">
           <label class="filter-label">Roast Level</label>
           <select class="filter-select" id="filterRoastLevel">
-            <option value="">All</option>
+            <option value="">All Levels</option>
             <option>Light</option><option>Medium-Light</option><option>Medium</option>
             <option>Medium-Dark</option><option>Dark</option>
           </select>
@@ -73,19 +107,23 @@
         <div class="filter-group">
           <label class="filter-label">Brew Method</label>
           <select class="filter-select" id="filterMethod">
-            <option value="">All</option>
-            <option>Pour Over</option><option>French Press</option><option>Moka Pot</option>
-            <option>Clever Dripper</option><option>South Indian Filter</option>
+            <option value="">All Methods</option>
+            <option>V60 / Pour Over</option>
+            <option>French Press</option>
+            <option>Moka Pot</option>
+            <option>Clever Dripper</option>
+            <option>South Indian Filter</option>
+            <option>Basic Home Espresso</option>
           </select>
         </div>
         <div class="filter-group">
           <label class="filter-label">Taste Profile</label>
           <select class="filter-select" id="filterTaste">
-            <option value="">All</option>
-            <option>Fruity / Bright</option><option>Chocolatey / Nutty</option>
-            <option>Floral / Delicate</option><option>Earthy / Smoky</option>
-            <option>Caramel / Sweet</option><option>Spicy / Complex</option>
-            <option>Citrus / Acidic</option>
+            <option value="">All Profiles</option>
+            <option>Fruity</option><option>Chocolatey</option>
+            <option>Floral</option><option>Earthy</option>
+            <option>Caramel</option><option>Spicy</option><option>Citrus</option>
+            <option>Nutty</option><option>Brown Sugar</option>
           </select>
         </div>
         <button class="filter-reset" id="filterReset">Reset</button>
@@ -95,8 +133,29 @@
         <div class="empty-state" id="journalEmpty">
           <div class="empty-icon">📓</div>
           <h3>No entries yet</h3>
-          <p>Your tasting journal is empty. Log your first cup via a GitHub Issue and it'll appear here automatically.</p>
-          <a href="https://github.com/rathialok901/coffee-fever/issues/new?template=journal_entry.yml" target="_blank" class="btn-primary">Log First Cup</a>
+          <p>Your tasting journal is empty. Use admin mode to log your first cup.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== COFFEE CATALOG SECTION ====== -->
+    <section class="section" id="section-catalog">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">Coffee Catalog</h2>
+          <p class="section-sub">Every bean in the collection.</p>
+        </div>
+        <button class="btn-primary admin-only" id="addCoffeeBtn" style="display:none;">+ Add Coffee</button>
+      </div>
+      <div class="catalog-tabs">
+        <button class="catalog-tab active" data-status="current">In Stock</button>
+        <button class="catalog-tab" data-status="past">Past Coffees</button>
+      </div>
+      <div class="catalog-grid" id="catalogGrid">
+        <div class="empty-state" id="catalogEmpty">
+          <div class="empty-icon">☕</div>
+          <h3>No coffees yet</h3>
+          <p>Add your current and past coffees using admin mode.</p>
         </div>
       </div>
     </section>
@@ -106,9 +165,9 @@
       <div class="section-header">
         <div>
           <h2 class="section-title">Roasters</h2>
-          <p class="section-sub">The people behind your beans.</p>
+          <p class="section-sub">The people behind the beans.</p>
         </div>
-        <a href="https://github.com/rathialok901/coffee-fever/issues/new?template=add_roaster.yml" target="_blank" class="btn-primary">+ Add Roaster</a>
+        <button class="btn-primary admin-only" id="addRoasterBtn" style="display:none;">+ Add Roaster</button>
       </div>
       <div class="roaster-grid" id="roasterGrid"></div>
     </section>
@@ -120,6 +179,7 @@
           <h2 class="section-title">My Gear</h2>
           <p class="section-sub">The tools of the craft.</p>
         </div>
+        <button class="btn-primary admin-only" id="addGearBtn" style="display:none;">+ Add Gear</button>
       </div>
       <div class="gear-grid" id="gearGrid"></div>
     </section>
@@ -139,57 +199,64 @@
         <button class="recipe-filter-btn" data-gear="moka-pot">Moka Pot</button>
         <button class="recipe-filter-btn" data-gear="clever-dripper">Clever Dripper</button>
         <button class="recipe-filter-btn" data-gear="south-indian-filter">Filter Kaapi</button>
+        <button class="recipe-filter-btn" data-gear="espresso">Espresso</button>
       </div>
       <div class="recipe-list" id="recipeList"></div>
     </section>
 
-    <!-- ====== STATS SECTION ====== -->
-    <section class="section" id="section-stats">
-      <div class="section-header">
-        <div>
-          <h2 class="section-title">Stats & Dashboard</h2>
-          <p class="section-sub">Patterns in the cup.</p>
-        </div>
-      </div>
-      <div class="stats-grid" id="statsGrid">
-        <div class="stat-card"><div class="stat-number" id="statTotalCups">0</div><div class="stat-label">Cups Logged</div></div>
-        <div class="stat-card"><div class="stat-number" id="statRoasters">3</div><div class="stat-label">Roasters Explored</div></div>
-        <div class="stat-card"><div class="stat-number" id="statBeans">0</div><div class="stat-label">Unique Beans</div></div>
-        <div class="stat-card"><div class="stat-number" id="statMethods">5</div><div class="stat-label">Brew Methods</div></div>
-      </div>
-      <div class="stats-charts">
-        <div class="chart-card">
-          <h3 class="chart-title">Brew Methods Used</h3>
-          <div class="bar-chart" id="chartMethods"></div>
-        </div>
-        <div class="chart-card">
-          <h3 class="chart-title">Taste Profiles</h3>
-          <div class="bar-chart" id="chartTastes"></div>
-        </div>
-        <div class="chart-card">
-          <h3 class="chart-title">Roast Levels</h3>
-          <div class="bar-chart" id="chartRoast"></div>
-        </div>
-      </div>
-    </section>
-
   </main>
+
+  <!-- ====== ADMIN PANEL ====== -->
+  <div class="admin-panel" id="adminPanel" aria-hidden="true">
+    <div class="admin-panel-inner">
+      <div class="admin-panel-header">
+        <h3 class="admin-panel-title">Admin Panel</h3>
+        <button class="admin-panel-close" id="adminPanelClose" aria-label="Close admin panel">✕</button>
+      </div>
+
+      <!-- Login form (shown when not authenticated) -->
+      <div id="adminLoginSection">
+        <p class="admin-hint" id="adminHint">Enter your admin password to unlock editing.</p>
+        <div class="admin-field">
+          <label class="admin-label">Password</label>
+          <input type="password" class="admin-input" id="adminPasswordInput" placeholder="Admin password" autocomplete="current-password" />
+        </div>
+        <button class="btn-primary" id="adminLoginBtn" style="width:100%;margin-top:0.5rem;">Unlock</button>
+        <p class="admin-setup-note" id="adminSetupNote" style="display:none;">First time? Your password will be saved to this browser.</p>
+      </div>
+
+      <!-- Authenticated controls (shown after unlock) -->
+      <div id="adminControls" style="display:none;">
+        <div class="admin-pat-section">
+          <label class="admin-label">GitHub Personal Access Token</label>
+          <p class="admin-hint">Needed to save data. Requires <code>contents:write</code> permission.</p>
+          <div class="admin-pat-row">
+            <input type="password" class="admin-input" id="githubTokenInput" placeholder="ghp_xxxxxxxxxxxx" autocomplete="off" />
+            <button class="btn-secondary" id="saveTokenBtn">Save</button>
+          </div>
+          <p class="admin-pat-status" id="patStatus"></p>
+        </div>
+        <button class="btn-secondary" id="adminLogoutBtn" style="width:100%;margin-top:1rem;">🔒 Lock Admin Mode</button>
+      </div>
+    </div>
+  </div>
+  <div class="admin-panel-overlay" id="adminPanelOverlay"></div>
 
   <!-- MODAL -->
   <div class="modal-overlay" id="modalOverlay">
     <div class="modal" id="modal">
-      <button class="modal-close" id="modalClose">✕</button>
+      <button class="modal-close" id="modalClose" aria-label="Close">✕</button>
       <div class="modal-body" id="modalBody"></div>
     </div>
   </div>
 
   <!-- TOAST -->
-  <div class="toast" id="toast"></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <footer class="site-footer">
-    <p>Grounds & Glory · Built by <a href="https://github.com/rathialok901" target="_blank">rathialok901</a> · <a href="https://github.com/rathialok901/coffee-fever" target="_blank">View on GitHub</a></p>
+    <p>Coffee Fever · Built by <a href="https://github.com/rathialok901" target="_blank" rel="noopener">rathialok901</a></p>
   </footer>
 
-  <script src="assets/js/app.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>

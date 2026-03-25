@@ -5,8 +5,12 @@
     "type": "Pour Over",
     "description": "The classic Japanese dripper. Produces a clean, bright cup that highlights origin character and delicate florals.",
     "grind": "Medium-Fine",
-    "searchImage": "Hario V60 pour over dripper",
-    "tags": ["pour over", "filter", "manual"]
+    "grindSettings": {
+      "filter": "22–24 clicks (K-Ultra)"
+    },
+    "notes": "Use a slow, controlled pour and a gooseneck kettle for best results. Works beautifully with light to medium roasts.",
+    "tags": ["pour over", "filter", "manual"],
+    "image": null
   },
   {
     "id": "french-press",
@@ -14,8 +18,12 @@
     "type": "Immersion",
     "description": "Full immersion brewing for a rich, heavy-bodied cup. Retains oils and fines for a textured, bold experience.",
     "grind": "Coarse",
-    "searchImage": "French press coffee maker",
-    "tags": ["immersion", "full body", "manual"]
+    "grindSettings": {
+      "frenchPress": "38–40 clicks (K-Ultra)"
+    },
+    "notes": "Skim the crust at 4 minutes before plunging to dramatically reduce bitterness.",
+    "tags": ["immersion", "full body", "manual"],
+    "image": null
   },
   {
     "id": "moka-pot",
@@ -23,8 +31,12 @@
     "type": "Stovetop",
     "description": "Italian stovetop brewer that pushes pressurised steam through coffee. Produces a concentrated, espresso-adjacent brew.",
     "grind": "Fine",
-    "searchImage": "Bialetti Moka pot stovetop",
-    "tags": ["stovetop", "concentrated", "pressure"]
+    "grindSettings": {
+      "stovetop": "10–12 clicks (K-Ultra)"
+    },
+    "notes": "Pre-heat the water before filling the bottom chamber to avoid bitter overextraction from slow metal heating.",
+    "tags": ["stovetop", "concentrated", "pressure"],
+    "image": null
   },
   {
     "id": "clever-dripper",
@@ -32,8 +44,12 @@
     "type": "Hybrid Immersion",
     "description": "Combines immersion steeping with a pour-over filter. Forgiving and consistent — great for dialling in new beans.",
     "grind": "Medium",
-    "searchImage": "Clever Dripper coffee brewer",
-    "tags": ["immersion", "filter", "hybrid", "manual"]
+    "grindSettings": {
+      "filter": "28–30 clicks (K-Ultra)"
+    },
+    "notes": "Adjust steep time (3–5 min) to taste. Very forgiving for new beans before you've fully dialled in.",
+    "tags": ["immersion", "filter", "hybrid", "manual"],
+    "image": null
   },
   {
     "id": "south-indian-filter",
@@ -41,8 +57,12 @@
     "type": "Drip / Percolation",
     "description": "Traditional stainless steel filter that produces a slow, concentrated decoction. The soul of filter kaapi — best paired with hot milk and sugar.",
     "grind": "Very Fine",
-    "searchImage": "South Indian coffee filter stainless steel",
-    "tags": ["traditional", "filter kaapi", "slow drip", "stovetop"]
+    "grindSettings": {
+      "percolation": "5–7 clicks (K-Ultra)"
+    },
+    "notes": "Use a chicory blend (80:20) for authentic filter kaapi. Never rush — the slow drip is essential to the flavour.",
+    "tags": ["traditional", "filter kaapi", "slow drip", "stovetop"],
+    "image": null
   },
   {
     "id": "1zpresso-k-ultra",
@@ -50,7 +70,13 @@
     "type": "Hand Grinder",
     "description": "A precision hand grinder with a 48-step external adjustment ring. Exceptionally uniform grind from espresso to coarse filter. Built like a tank.",
     "grind": "All ranges (1–48 clicks)",
-    "searchImage": "1Zpresso K-Ultra hand grinder",
-    "tags": ["grinder", "manual", "precision", "hand grinder"]
+    "grindSettings": {
+      "espresso": "8–12 clicks",
+      "filter": "22–30 clicks",
+      "frenchPress": "38–42 clicks"
+    },
+    "notes": "Each full rotation of the ring = 1 click. Zero point: tighten until burrs touch, then back off to your starting click count.",
+    "tags": ["grinder", "manual", "precision", "hand grinder"],
+    "image": null
   }
 ]
