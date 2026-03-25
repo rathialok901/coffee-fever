@@ -14,5 +14,21 @@
     "tasteTags": [],
     "description": "",
     "image": null
+  },
+  {
+    "id": "kalledevarapura-estate",
+    "name": "Kalledevarapura Estate",
+    "roasterId": "blue-tokai",
+    "origin": "",
+    "region": "Karnataka",
+    "roastLevel": "Medium",
+    "process": "",
+    "variety": "",
+    "status": "past",
+    "dateAdded": "2026-03-11",
+    "dateFinished": "2026-03-23",
+    "tasteTags": [],
+    "description": "",
+    "image": null
   }
 ]
