@@ -27,6 +27,7 @@
         <a href="#" class="nav-link" data-section="catalog">Coffee</a>
         <a href="#" class="nav-link" data-section="gear">Gear</a>
         <a href="#" class="nav-link" data-section="recipes">Recipes</a>
+        <a href="#" class="nav-link admin-only" data-section="spend" style="display:none;">Spend</a>
       </nav>
       <div class="header-actions">
         <button class="admin-lock-btn" id="adminLockBtn" aria-label="Admin panel" title="Admin">🔒</button>
@@ -223,6 +224,17 @@
         <button class="recipe-filter-btn" data-gear="espresso">Espresso</button>
       </div>
       <div class="recipe-list" id="recipeList"></div>
+    </section>
+
+    <!-- ====== SPEND SECTION (admin only) ====== -->
+    <section class="section" id="section-spend">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">Spend</h2>
+          <p class="section-sub">What you've invested in the pursuit of coffee.</p>
+        </div>
+      </div>
+      <div id="spendContent"></div>
     </section>
 
   </main>

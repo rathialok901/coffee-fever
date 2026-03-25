@@ -1126,3 +1126,81 @@ body {
   .catalog-tabs { flex-wrap: wrap; }
   .form-row { grid-template-columns: 1fr; }
 }
+
+/* ---- BAG OPENED TOGGLE ---- */
+.bag-toggle {
+  font-size: 0.7rem; font-weight: 500; padding: 0.15rem 0.5rem;
+  border-radius: 20px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text-muted);
+  cursor: pointer; transition: background var(--transition), color var(--transition);
+  white-space: nowrap;
+}
+.bag-toggle:hover { background: var(--accent-light); color: var(--accent-dark); border-color: var(--accent-light); }
+.bag-toggle.opened { background: var(--accent-light); color: var(--accent-dark); border-color: var(--accent-light); }
+.bag-toggle.no-click { cursor: default; pointer-events: none; }
+
+/* ---- LASTED CHIP ---- */
+.lasted-chip {
+  font-size: 0.68rem; font-weight: 500; padding: 0.15rem 0.45rem;
+  border-radius: 20px; background: var(--surface-alt); color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+/* ---- COST FORM INPUT ---- */
+.form-input-prefix-wrap { position: relative; display: flex; align-items: center; }
+.form-input-prefix {
+  position: absolute; left: 0.75rem; color: var(--text-muted);
+  font-size: 0.875rem; pointer-events: none; z-index: 1;
+}
+.form-input--prefixed { padding-left: 1.75rem; }
+
+/* ---- SPEND SECTION ---- */
+.spend-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.spend-card {
+  background: var(--white);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  padding: 1.5rem 1.75rem;
+  text-align: center;
+  box-shadow: 0 2px 8px var(--shadow-sm);
+}
+.spend-card-amount {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  color: var(--accent);
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+}
+.spend-card-label { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.spend-card-sub { font-size: 0.75rem; color: var(--text-light); font-family: var(--font-mono); margin-top: 0.25rem; }
+
+.spend-breakdown {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 2rem;
+}
+.spend-breakdown-title { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 0.75rem; }
+.spend-breakdown-row { display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+.spend-breakdown-row:last-child { border-bottom: none; }
+.spend-breakdown-amt { font-family: var(--font-mono); font-weight: 600; color: var(--text); }
+
+.spend-list-title { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 0.75rem; }
+.spend-list { display: flex; flex-direction: column; gap: 0.4rem; }
+.spend-list-item {
+  display: flex; justify-content: space-between; align-items: center;
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 0.75rem 1.25rem;
+}
+.spend-list-left { display: flex; align-items: center; gap: 0.75rem; }
+.spend-list-icon { font-size: 1.1rem; }
+.spend-list-name { font-size: 0.9rem; color: var(--text); font-weight: 500; }
+.spend-list-date { font-size: 0.75rem; color: var(--text-light); font-family: var(--font-mono); margin-top: 0.1rem; }
+.spend-list-cost { font-family: var(--font-mono); font-weight: 600; color: var(--accent); font-size: 0.95rem; }

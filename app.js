@@ -4,6 +4,7 @@
 
 // ---- CONFIG ----
 const GITHUB_OWNER  = 'rathialok901';
+const CURRENCY      = '₹';
 const GITHUB_REPO   = 'coffee-fever';
 const GITHUB_BRANCH = 'main';
 
@@ -48,6 +49,16 @@ function formatDate(iso) {
 
 function generateId(prefix) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+}
+
+function daysLasted(dateAdded, dateFinished) {
+  if (!dateAdded || !dateFinished) return null;
+  const d = Math.round((new Date(dateFinished + 'T00:00:00') - new Date(dateAdded + 'T00:00:00')) / 86400000);
+  return d > 0 ? d : null;
+}
+
+function fmtCost(n) {
+  return CURRENCY + Number(n).toLocaleString('en-IN');
 }
 
 function slugify(str) {
@@ -366,6 +377,7 @@ function renderSection(name) {
   if (name === 'catalog')  { populateCatalogFilters(); renderCatalog(); }
   if (name === 'gear')     renderGear();
   if (name === 'recipes')  renderRecipes();
+  if (name === 'spend')    renderSpend();
 }
 
 // ---- STAT STRIP ----
@@ -592,9 +604,18 @@ function buildCoffeeCard(c) {
   const roaster = state.roasters.find(r => r.id === c.roasterId);
   const roasterName = roaster ? roaster.name : (c.roasterId || '');
   const journalCount = state.journal.filter(e => e.coffeeId === c.id).length;
+  const lasted = c.status === 'past' ? daysLasted(c.dateAdded, c.dateFinished) : null;
 
   const div = document.createElement('div');
   div.className = 'coffee-card';
+
+  const bagToggle = c.status === 'current'
+    ? (state.adminMode
+        ? `<button class="bag-toggle ${c.bagOpened ? 'opened' : ''}" onclick="event.stopPropagation();toggleBagOpened('${c.id}')" title="${c.bagOpened ? 'Mark sealed' : 'Mark opened'}">
+             ${c.bagOpened ? '▶ Opened' : '○ Sealed'}
+           </button>`
+        : (c.bagOpened ? `<span class="bag-toggle opened no-click">▶ Opened</span>` : ''))
+    : '';
 
   div.innerHTML = `
     ${buildCardImage(c.image, c.name)}
@@ -607,6 +628,7 @@ function buildCoffeeCard(c) {
         ${c.status === 'current'
           ? `<span class="status-current">● In Stock</span>`
           : `<span class="status-past">Finished</span>`}
+        ${lasted ? `<span class="lasted-chip">${lasted}d</span>` : ''}
       </div>
       <div class="journal-tags">
         ${(c.tasteTags||[]).slice(0,4).map(t => `<span class="taste-tag ${getTasteClass(t)}">${t}</span>`).join('')}
@@ -614,18 +636,40 @@ function buildCoffeeCard(c) {
     </div>
     <div class="coffee-card-footer">
       <span class="coffee-date">${c.origin || '—'}</span>
-      <span style="font-size:0.775rem;color:var(--text-light);font-family:var(--font-mono);">
-        ${journalCount ? journalCount + ' brew' + (journalCount > 1 ? 's' : '') : 'No brews yet'}
-      </span>
+      <div style="display:flex;align-items:center;gap:0.5rem;">
+        ${bagToggle}
+        <span style="font-size:0.775rem;color:var(--text-light);font-family:var(--font-mono);">
+          ${journalCount ? journalCount + ' brew' + (journalCount > 1 ? 's' : '') : 'No brews yet'}
+        </span>
+      </div>
     </div>
   `;
 
   div.addEventListener('click', (ev) => {
     if (ev.target.closest('.card-edit-btn')) { ev.stopPropagation(); openCoffeeForm(c); return; }
+    if (ev.target.closest('.bag-toggle')) return;
     openCoffeeModal(c);
   });
 
   return div;
+}
+
+async function toggleBagOpened(coffeeId) {
+  if (!state.adminMode) return;
+  const coffee = state.coffees.find(c => c.id === coffeeId);
+  if (!coffee) return;
+  const updated = state.coffees.map(c =>
+    c.id === coffeeId ? { ...c, bagOpened: !c.bagOpened } : c
+  );
+  try {
+    await writeDataFile('coffees.json', updated,
+      `☕ ${coffee.name}: mark bag as ${!coffee.bagOpened ? 'opened' : 'sealed'}`);
+    state.coffees = updated;
+    renderCatalog();
+    showToast(!coffee.bagOpened ? 'Bag marked as opened' : 'Bag marked as sealed', 'success');
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
 }
 
 function openCoffeeModal(c) {
@@ -651,7 +695,9 @@ function openCoffeeModal(c) {
         ['Process',     c.process],
         ['Variety',     c.variety],
         ['Added',       formatDate(c.dateAdded)],
-        ['Finished',    c.dateFinished ? formatDate(c.dateFinished) : null]
+        ['Finished',    c.dateFinished ? formatDate(c.dateFinished) : null],
+        ['Bag Lasted',  (() => { const d = daysLasted(c.dateAdded, c.dateFinished); return d ? d + ' days' : null; })()],
+        ['Cost',        c.cost ? fmtCost(c.cost) : null]
       ].filter(([,v]) => v).map(([l,v]) => `
         <div class="modal-detail-item">
           <div class="modal-detail-label">${l}</div>
@@ -1311,6 +1357,16 @@ function openCoffeeForm(existing = null) {
           <input class="form-input" type="date" id="cDateFinished" value="${c.dateFinished||''}" />
         </div>
       </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label">Cost (optional)</label>
+          <div class="form-input-prefix-wrap">
+            <span class="form-input-prefix">${CURRENCY}</span>
+            <input class="form-input form-input--prefixed" type="number" id="cCost" placeholder="e.g. 450" value="${c.cost||''}" min="0" step="1" />
+          </div>
+        </div>
+        <div class="form-field"></div>
+      </div>
       <div class="form-field">
         <label class="form-label">Taste Tags</label>
         <input class="taste-tags-input" type="text" id="cTasteTags"
@@ -1361,6 +1417,7 @@ async function saveCoffee(existingId) {
       imagePath = await uploadImageFile(fileInput.files[0], 'coffee', itemId);
     }
 
+    const existingCoffee = existingId ? state.coffees.find(c => c.id === existingId) : null;
     const coffee = {
       id: existingId || itemId,
       name,
@@ -1375,6 +1432,8 @@ async function saveCoffee(existingId) {
       dateFinished: $('cDateFinished').value || null,
       tasteTags,
       description:  $('cDescription').value.trim(),
+      cost:         $('cCost').value ? parseFloat($('cCost').value) : null,
+      bagOpened:    existingCoffee?.bagOpened || false,
       image:        imagePath
     };
 
@@ -1542,6 +1601,19 @@ function openGearForm(existing = null) {
         <label class="form-label">Grind Range</label>
         <input class="form-input" type="text" id="gGrind" placeholder="e.g. Medium-Fine" value="${g.grind||''}" />
       </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label">Cost (optional)</label>
+          <div class="form-input-prefix-wrap">
+            <span class="form-input-prefix">${CURRENCY}</span>
+            <input class="form-input form-input--prefixed" type="number" id="gCost" placeholder="e.g. 12000" value="${g.cost||''}" min="0" step="1" />
+          </div>
+        </div>
+        <div class="form-field">
+          <label class="form-label">Date Purchased</label>
+          <input class="form-input" type="date" id="gDateAdded" value="${g.dateAdded||''}" />
+        </div>
+      </div>
       <div class="form-field">
         <label class="form-label">Description</label>
         <textarea class="form-textarea" id="gDescription" placeholder="What does this piece of gear do? What's special about it?">${g.description||''}</textarea>
@@ -1598,6 +1670,8 @@ async function saveGear(existingId) {
       grindSettings: existing?.grindSettings || null,
       notes:       $('gNotes').value.trim(),
       tags:        existing?.tags || [],
+      cost:        $('gCost').value ? parseFloat($('gCost').value) : null,
+      dateAdded:   $('gDateAdded').value || null,
       image:       imagePath
     };
 
@@ -1631,6 +1705,98 @@ function previewFormImage(input, previewId, uploadId) {
     img.style.display = 'block';
   };
   reader.readAsDataURL(file);
+}
+
+// ---- SECTION: SPEND ----
+function renderSpend() {
+  const content = $('spendContent');
+  const now = Date.now();
+  const cutoff30 = now - 30 * 86400000;
+  const cutoff90 = now - 90 * 86400000;
+
+  const coffeeItems = state.coffees
+    .filter(c => c.cost)
+    .map(c => ({ name: c.name, cost: c.cost, date: c.dateAdded, type: 'coffee' }));
+
+  const gearItems = state.gear
+    .filter(g => g.cost)
+    .map(g => ({ name: g.name, cost: g.cost, date: g.dateAdded, type: 'gear' }));
+
+  const all = [...coffeeItems, ...gearItems]
+    .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+
+  function itemsInPeriod(items, cutoff) {
+    return items.filter(i => i.date && new Date(i.date + 'T00:00:00').getTime() >= cutoff);
+  }
+
+  const total = arr => arr.reduce((s, i) => s + (i.cost || 0), 0);
+
+  const last30  = itemsInPeriod(all, cutoff30);
+  const last90  = itemsInPeriod(all, cutoff90);
+  const allTime = all;
+
+  const coffee90 = itemsInPeriod(coffeeItems, cutoff90);
+  const gear90   = itemsInPeriod(gearItems, cutoff90);
+
+  if (all.length === 0) {
+    content.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">💰</div>
+        <h3>No spend tracked yet</h3>
+        <p>Add a cost when logging a coffee or gear item to track spend here.</p>
+      </div>`;
+    return;
+  }
+
+  content.innerHTML = `
+    <div class="spend-summary">
+      <div class="spend-card">
+        <div class="spend-card-amount">${fmtCost(total(last30))}</div>
+        <div class="spend-card-label">Last 30 days</div>
+        <div class="spend-card-sub">${last30.length} item${last30.length !== 1 ? 's' : ''}</div>
+      </div>
+      <div class="spend-card">
+        <div class="spend-card-amount">${fmtCost(total(last90))}</div>
+        <div class="spend-card-label">Last 90 days</div>
+        <div class="spend-card-sub">${last90.length} item${last90.length !== 1 ? 's' : ''}</div>
+      </div>
+      <div class="spend-card">
+        <div class="spend-card-amount">${fmtCost(total(allTime))}</div>
+        <div class="spend-card-label">All time</div>
+        <div class="spend-card-sub">${allTime.length} item${allTime.length !== 1 ? 's' : ''}</div>
+      </div>
+    </div>
+
+    ${last90.length ? `
+      <div class="spend-breakdown">
+        <h3 class="spend-breakdown-title">Last 90 days breakdown</h3>
+        <div class="spend-breakdown-row">
+          <span>☕ Coffee</span>
+          <span class="spend-breakdown-amt">${fmtCost(total(coffee90))}</span>
+        </div>
+        <div class="spend-breakdown-row">
+          <span>⚙️ Gear</span>
+          <span class="spend-breakdown-amt">${fmtCost(total(gear90))}</span>
+        </div>
+      </div>
+    ` : ''}
+
+    <h3 class="spend-list-title">All purchases</h3>
+    <div class="spend-list">
+      ${all.map(i => `
+        <div class="spend-list-item">
+          <div class="spend-list-left">
+            <span class="spend-list-icon">${i.type === 'coffee' ? '☕' : '⚙️'}</span>
+            <div>
+              <div class="spend-list-name">${i.name}</div>
+              <div class="spend-list-date">${i.date ? formatDate(i.date) : '—'}</div>
+            </div>
+          </div>
+          <div class="spend-list-cost">${fmtCost(i.cost)}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
 }
 
 // ---- SEARCH ----
@@ -1773,6 +1939,5 @@ document.addEventListener('DOMContentLoaded', () => {
   // Admin section add buttons
   $('addJournalBtn').addEventListener('click', () => openJournalForm());
   $('addCoffeeBtn').addEventListener('click',  () => openCoffeeForm());
-  $('addRoasterBtn').addEventListener('click', () => openRoasterForm());
   $('addGearBtn').addEventListener('click',    () => openGearForm());
 });
