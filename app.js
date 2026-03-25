@@ -69,6 +69,29 @@ function fmtCost(n) {
   return CURRENCY + Number(n).toLocaleString('en-IN');
 }
 
+function getFreshness(roastDate) {
+  if (!roastDate) return null;
+  const days = Math.floor((Date.now() - new Date(roastDate + 'T00:00:00')) / 86400000);
+  if (days < 0)  return { label: 'Pre-roast',        cls: 'fresh-pre' };
+  if (days < 7)  return { label: days + 'd · Degassing', cls: 'fresh-early' };
+  if (days < 21) return { label: days + 'd · Peak',      cls: 'fresh-peak' };
+  if (days < 35) return { label: days + 'd · Good',      cls: 'fresh-good' };
+  if (days < 60) return { label: days + 'd · Fading',    cls: 'fresh-fading' };
+  return           { label: days + 'd · Stale',      cls: 'fresh-stale' };
+}
+
+function calcBrewStreak() {
+  if (!state.journal.length) return 0;
+  const dates = new Set(state.journal.map(e => e.date));
+  let streak = 0;
+  const d = new Date(); d.setHours(0,0,0,0);
+  const fmt = x => x.toISOString().split('T')[0];
+  // Allow today or yesterday as starting point
+  if (!dates.has(fmt(d))) { d.setDate(d.getDate() - 1); }
+  while (dates.has(fmt(d))) { streak++; d.setDate(d.getDate() - 1); }
+  return streak;
+}
+
 function slugify(str) {
   return str.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
@@ -386,6 +409,7 @@ function renderSection(name) {
   if (name === 'gear')     renderGear();
   if (name === 'recipes')  renderRecipes();
   if (name === 'spend')    renderSpend();
+  if (name === 'insights') renderInsights();
 }
 
 // ---- STAT STRIP ----
@@ -395,6 +419,7 @@ function updateStatStrip() {
   $('statBeans').textContent    = new Set(j.map(e => e.coffeeId || e.beanName)).size;
   $('statRoasters').textContent = state.roasters.length;
   $('statMethods').textContent  = new Set(j.map(e => e.brewMethod).filter(Boolean)).size;
+  $('statStreak').textContent   = calcBrewStreak();
 }
 
 // ---- FILTERS ----
@@ -622,6 +647,8 @@ function buildCoffeeCard(c) {
   const div = document.createElement('div');
   div.className = 'coffee-card';
 
+  const freshness = c.status === 'current' ? getFreshness(c.roastDate) : null;
+
   const bagToggle = c.status === 'current'
     ? (state.adminMode
         ? `<button class="bag-toggle ${c.bagOpened ? 'opened' : ''}" onclick="event.stopPropagation();toggleBagOpened('${c.id}')" title="${c.bagOpened ? 'Mark sealed' : 'Mark opened'}">
@@ -629,6 +656,12 @@ function buildCoffeeCard(c) {
            </button>`
         : (c.bagOpened ? `<span class="bag-toggle opened no-click">▶ Opened</span>` : ''))
     : '';
+
+  const statusBadge = c.status === 'current'
+    ? `<span class="status-current">● In Stock</span>`
+    : c.status === 'wishlist'
+    ? `<span class="status-wishlist">★ Want to Try</span>`
+    : `<span class="status-past">Finished</span>`;
 
   div.innerHTML = `
     ${buildCardImage(c.image, c.name)}
@@ -638,10 +671,9 @@ function buildCoffeeCard(c) {
       <div class="coffee-card-meta">
         ${c.roastLevel ? `<span class="roast-badge">${c.roastLevel}</span>` : ''}
         ${c.process ? `<span class="coffee-process-tag">${c.process}</span>` : ''}
-        ${c.status === 'current'
-          ? `<span class="status-current">● In Stock</span>`
-          : `<span class="status-past">Finished</span>`}
+        ${statusBadge}
         ${lasted ? `<span class="lasted-chip">${lasted}d</span>` : ''}
+        ${freshness ? `<span class="freshness-chip ${freshness.cls}">${freshness.label}</span>` : ''}
       </div>
       <div class="journal-tags">
         ${(c.tasteTags||[]).slice(0,4).map(t => `<span class="taste-tag ${getTasteClass(t)}">${t}</span>`).join('')}
@@ -708,6 +740,7 @@ function openCoffeeModal(c) {
         ['Process',     c.process],
         ['Variety',     c.variety],
         ['Added',       formatDate(c.dateAdded)],
+        ['Roast Date',  c.roastDate ? formatDate(c.roastDate) : null],
         ['Finished',    c.dateFinished ? formatDate(c.dateFinished) : null],
         ['Bag Lasted',  (() => { const d = daysLasted(c.dateAdded, c.dateFinished); return d ? d + ' days' : null; })()],
         ['Cost',        c.cost ? fmtCost(c.cost) : null]
@@ -720,6 +753,10 @@ function openCoffeeModal(c) {
     </div>
 
     ${c.description ? `<p style="font-size:0.9rem;color:var(--text);line-height:1.7;margin-bottom:1.25rem;">${c.description}</p>` : ''}
+    ${c.dialInNotes ? `
+      <p class="modal-section-title">Dial-In Notes</p>
+      <div class="recipe-notes-box" style="margin-bottom:1.25rem;font-family:var(--font-mono);font-size:0.84rem;">${c.dialInNotes}</div>
+    ` : ''}
 
     ${(c.tasteTags||[]).length ? `
       <div class="journal-tags" style="margin-bottom:1.25rem;">
@@ -1403,6 +1440,7 @@ function openCoffeeForm(existing = null) {
           <select class="form-select" id="cStatus">
             <option value="current" ${(c.status||'current')==='current'?'selected':''}>In Stock (Current)</option>
             <option value="past" ${c.status==='past'?'selected':''}>Finished (Past)</option>
+            <option value="wishlist" ${c.status==='wishlist'?'selected':''}>Want to Try</option>
           </select>
         </div>
       </div>
@@ -1424,7 +1462,10 @@ function openCoffeeForm(existing = null) {
             <input class="form-input form-input--prefixed" type="number" id="cCost" placeholder="e.g. 450" value="${c.cost||''}" min="0" step="1" />
           </div>
         </div>
-        <div class="form-field"></div>
+        <div class="form-field">
+          <label class="form-label">Roast Date (optional)</label>
+          <input class="form-input" type="date" id="cRoastDate" value="${c.roastDate||''}" />
+        </div>
       </div>
       <div class="form-field">
         <label class="form-label">Taste Tags</label>
@@ -1435,6 +1476,10 @@ function openCoffeeForm(existing = null) {
       <div class="form-field">
         <label class="form-label">Description</label>
         <textarea class="form-textarea" id="cDescription" placeholder="Notes about this coffee, what makes it special…">${c.description||''}</textarea>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Dial-In Notes (optional)</label>
+        <textarea class="form-textarea" id="cDialInNotes" placeholder="Grind settings per method, adjustments that worked, e.g. 26 clicks for Clever, 22 for V60…" style="min-height:70px;">${c.dialInNotes||''}</textarea>
       </div>
       <div class="form-field">
         <label class="form-label">Photo (optional)</label>
@@ -1492,6 +1537,8 @@ async function saveCoffee(existingId) {
       tasteTags,
       description:  $('cDescription').value.trim(),
       cost:         $('cCost').value ? parseFloat($('cCost').value) : null,
+      roastDate:    $('cRoastDate').value || null,
+      dialInNotes:  $('cDialInNotes').value.trim() || null,
       bagOpened:    existingCoffee?.bagOpened || false,
       image:        imagePath
     };
@@ -1894,6 +1941,127 @@ async function saveRecipe(existingId) {
     $('recipeSaving').style.display = 'none';
     showToast(err.message, 'error');
   }
+}
+
+// ---- SECTION: INSIGHTS ----
+function renderInsights() {
+  const content = $('insightsContent');
+  const j = state.journal;
+
+  if (j.length === 0) {
+    content.innerHTML = `<div class="empty-state"><div class="empty-icon">📊</div><h3>No data yet</h3><p>Log some cups to see insights here.</p></div>`;
+    return;
+  }
+
+  // Taste tags frequency
+  const tagCounts = {};
+  j.forEach(e => (e.tasteTags || []).forEach(t => { tagCounts[t] = (tagCounts[t] || 0) + 1; }));
+  const topTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]).slice(0, 12);
+  const maxTagCount = topTags[0]?.[1] || 1;
+
+  // Brew method breakdown
+  const methodMap = {};
+  j.forEach(e => {
+    if (!e.brewMethod) return;
+    if (!methodMap[e.brewMethod]) methodMap[e.brewMethod] = { count: 0, ratings: [], scores: [] };
+    methodMap[e.brewMethod].count++;
+    if (e.overallRating) methodMap[e.brewMethod].ratings.push(e.overallRating);
+    const s = e.scores || {};
+    const vals = ['acidity','body','sweetness','finish'].map(k => s[k]).filter(v => v != null);
+    if (vals.length) methodMap[e.brewMethod].scores.push(vals.reduce((a, b) => a + b, 0) / vals.length);
+  });
+  const methods = Object.entries(methodMap).sort((a, b) => b[1].count - a[1].count);
+
+  // Top rated coffees
+  const coffeeRatings = {};
+  j.forEach(e => {
+    const key = e.coffeeId || e.beanName || 'Unknown';
+    if (!coffeeRatings[key]) coffeeRatings[key] = { name: e.beanName || key, ratings: [] };
+    if (e.overallRating) coffeeRatings[key].ratings.push(e.overallRating);
+  });
+  const topCoffees = Object.values(coffeeRatings)
+    .filter(c => c.ratings.length > 0)
+    .map(c => ({ ...c, avg: c.ratings.reduce((a, b) => a + b, 0) / c.ratings.length }))
+    .sort((a, b) => b.avg - a.avg || b.ratings.length - a.ratings.length)
+    .slice(0, 5);
+
+  // Quick stats
+  const roastLevels = {};
+  j.forEach(e => { if (e.roastLevel) roastLevels[e.roastLevel] = (roastLevels[e.roastLevel] || 0) + 1; });
+  const favRoast = Object.entries(roastLevels).sort((a, b) => b[1] - a[1])[0]?.[0];
+  const ratedEntries = j.filter(e => e.overallRating);
+  const avgRating = ratedEntries.length
+    ? (ratedEntries.reduce((s, e) => s + e.overallRating, 0) / ratedEntries.length).toFixed(1)
+    : null;
+
+  content.innerHTML = `
+    <div class="insights-grid">
+
+      <div class="insight-quick-row">
+        ${favRoast ? `<div class="insight-quick-card"><div class="iq-val">${favRoast}</div><div class="iq-label">Favourite Roast</div></div>` : ''}
+        ${methods[0] ? `<div class="insight-quick-card"><div class="iq-val">${methods[0][0].replace('Basic Home ','')}</div><div class="iq-label">Top Brew Method</div></div>` : ''}
+        ${avgRating ? `<div class="insight-quick-card"><div class="iq-val">${avgRating}★</div><div class="iq-label">Avg Rating</div></div>` : ''}
+        <div class="insight-quick-card"><div class="iq-val">${new Set(j.map(e => e.coffeeId || e.beanName)).size}</div><div class="iq-label">Unique Coffees</div></div>
+      </div>
+
+      ${topTags.length ? `
+        <div class="insight-card">
+          <h3 class="insight-card-title">Taste Profile</h3>
+          <div class="insight-bars">
+            ${topTags.map(([tag, count]) => `
+              <div class="insight-bar-row">
+                <div class="insight-bar-label">${tag}</div>
+                <div class="insight-bar-track">
+                  <div class="insight-bar-fill" style="width:${Math.round(count / maxTagCount * 100)}%"></div>
+                </div>
+                <div class="insight-bar-count">${count}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      ` : ''}
+
+      ${methods.length ? `
+        <div class="insight-card">
+          <h3 class="insight-card-title">Brew Methods</h3>
+          <div class="insight-method-table">
+            <div class="insight-method-header">
+              <span>Method</span><span>Brews</span><span>Avg ★</span><span>Avg Score</span>
+            </div>
+            ${methods.map(([method, data]) => {
+              const avgR = data.ratings.length ? (data.ratings.reduce((a,b)=>a+b,0)/data.ratings.length).toFixed(1) : '—';
+              const avgS = data.scores.length  ? (data.scores.reduce((a,b)=>a+b,0)/data.scores.length).toFixed(1)   : '—';
+              return `<div class="insight-method-row">
+                <span class="insight-method-name">${method}</span>
+                <span class="insight-method-num">${data.count}</span>
+                <span class="insight-method-num">${avgR !== '—' ? avgR + '★' : '—'}</span>
+                <span class="insight-method-num">${avgS !== '—' ? avgS + '/10' : '—'}</span>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>
+      ` : ''}
+
+      ${topCoffees.length ? `
+        <div class="insight-card">
+          <h3 class="insight-card-title">Top Rated Coffees</h3>
+          <div class="insight-top-list">
+            ${topCoffees.map((c, i) => `
+              <div class="insight-top-item">
+                <span class="insight-top-rank">${i + 1}</span>
+                <div class="insight-top-info">
+                  <div class="insight-top-name">${c.name}</div>
+                  <div class="insight-top-sub">${c.ratings.length} brew${c.ratings.length > 1 ? 's' : ''}</div>
+                </div>
+                <div class="insight-top-rating">${starsHtml(Math.round(c.avg))} <span style="font-size:0.75rem;color:var(--text-muted);font-family:var(--font-mono);">${c.avg.toFixed(1)}</span></div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      ` : ''}
+
+    </div>
+  `;
 }
 
 // ---- SECTION: SPEND ----

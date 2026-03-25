@@ -1224,3 +1224,90 @@ body {
   transition: background var(--transition), color var(--transition);
 }
 .recipe-step-remove:hover { background: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
+
+/* ---- FRESHNESS CHIP ---- */
+.freshness-chip {
+  font-size: 0.68rem; font-weight: 500; padding: 0.15rem 0.5rem;
+  border-radius: 20px; border: 1px solid; white-space: nowrap;
+}
+.fresh-pre    { background: #f0f0f0; color: #666; border-color: #ddd; }
+.fresh-early  { background: #fef9c3; color: #854d0e; border-color: #fde047; }
+.fresh-peak   { background: #dcfce7; color: #166534; border-color: #86efac; }
+.fresh-good   { background: #d1fae5; color: #065f46; border-color: #6ee7b7; }
+.fresh-fading { background: #fff7ed; color: #9a3412; border-color: #fdba74; }
+.fresh-stale  { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+
+/* ---- WISHLIST STATUS ---- */
+.status-wishlist {
+  font-size: 0.7rem; font-weight: 600; color: #7c3aed;
+  background: #ede9fe; padding: 0.2rem 0.55rem;
+  border-radius: 20px; border: 1px solid #c4b5fd;
+}
+
+/* ---- INSIGHTS SECTION ---- */
+.insights-grid { display: flex; flex-direction: column; gap: 1.5rem; }
+
+.insight-quick-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
+}
+.insight-quick-card {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 1.25rem 1.5rem; text-align: center;
+}
+.iq-val {
+  font-family: var(--font-display); font-size: 1.4rem;
+  color: var(--accent); font-weight: 600; margin-bottom: 0.25rem;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.iq-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+.insight-card {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1.5rem 1.75rem;
+}
+.insight-card-title {
+  font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text-muted); margin-bottom: 1.25rem;
+}
+
+.insight-bars { display: flex; flex-direction: column; gap: 0.5rem; }
+.insight-bar-row { display: grid; grid-template-columns: 120px 1fr 32px; gap: 0.75rem; align-items: center; }
+.insight-bar-label { font-size: 0.85rem; color: var(--text); }
+.insight-bar-track { height: 8px; background: var(--surface); border-radius: 4px; overflow: hidden; }
+.insight-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent-light), var(--accent)); border-radius: 4px; transition: width 0.6s ease; }
+.insight-bar-count { font-size: 0.78rem; color: var(--text-muted); font-family: var(--font-mono); text-align: right; }
+
+.insight-method-table { display: flex; flex-direction: column; }
+.insight-method-header {
+  display: grid; grid-template-columns: 1fr 60px 80px 90px;
+  font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--text-light); padding: 0 0 0.5rem; border-bottom: 1px solid var(--border);
+  margin-bottom: 0.25rem;
+}
+.insight-method-row {
+  display: grid; grid-template-columns: 1fr 60px 80px 90px;
+  padding: 0.5rem 0; border-bottom: 1px solid var(--border); align-items: center;
+  font-size: 0.875rem;
+}
+.insight-method-row:last-child { border-bottom: none; }
+.insight-method-name { color: var(--text); }
+.insight-method-num { color: var(--text-muted); font-family: var(--font-mono); font-size: 0.83rem; }
+
+.insight-top-list { display: flex; flex-direction: column; gap: 0.5rem; }
+.insight-top-item {
+  display: flex; align-items: center; gap: 1rem;
+  padding: 0.6rem 0; border-bottom: 1px solid var(--border);
+}
+.insight-top-item:last-child { border-bottom: none; }
+.insight-top-rank {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--surface); color: var(--text-muted);
+  font-size: 0.75rem; font-weight: 700; font-family: var(--font-mono);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.insight-top-info { flex: 1; min-width: 0; }
+.insight-top-name { font-size: 0.9rem; color: var(--text); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.insight-top-sub { font-size: 0.75rem; color: var(--text-light); margin-top: 0.1rem; }
+.insight-top-rating { display: flex; align-items: center; gap: 0.4rem; flex-shrink: 0; color: var(--accent); font-size: 0.85rem; }

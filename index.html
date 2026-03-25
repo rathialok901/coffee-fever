@@ -28,6 +28,7 @@
         <a href="#" class="nav-link" data-section="gear">Gear</a>
         <a href="#" class="nav-link" data-section="recipes">Recipes</a>
         <a href="#" class="nav-link admin-only" data-section="spend" style="display:none;">Spend</a>
+        <a href="#" class="nav-link admin-only" data-section="insights" style="display:none;">Insights</a>
       </nav>
       <div class="header-actions">
         <button class="admin-lock-btn" id="adminLockBtn" aria-label="Admin panel" title="Admin">🔒</button>
@@ -75,6 +76,10 @@
         <div class="stat-strip-item">
           <div class="stat-strip-num" id="statMethods">0</div>
           <div class="stat-strip-label">Brew Methods</div>
+        </div>
+        <div class="stat-strip-item">
+          <div class="stat-strip-num" id="statStreak">0</div>
+          <div class="stat-strip-label">Day Streak 🔥</div>
         </div>
       </div>
 
@@ -161,6 +166,7 @@
         <button class="catalog-tab" data-status="">All</button>
         <button class="catalog-tab active" data-status="current">In Stock</button>
         <button class="catalog-tab" data-status="past">Past Coffees</button>
+        <button class="catalog-tab" data-status="wishlist">Want to Try</button>
       </div>
       <div class="filter-bar" style="margin-top:1rem;">
         <div class="filter-group">
@@ -225,6 +231,17 @@
         <button class="recipe-filter-btn" data-gear="espresso">Espresso</button>
       </div>
       <div class="recipe-list" id="recipeList"></div>
+    </section>
+
+    <!-- ====== INSIGHTS SECTION (admin only) ====== -->
+    <section class="section" id="section-insights">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">Insights</h2>
+          <p class="section-sub">Patterns from your brewing journey.</p>
+        </div>
+      </div>
+      <div id="insightsContent"></div>
     </section>
 
     <!-- ====== SPEND SECTION (admin only) ====== -->
