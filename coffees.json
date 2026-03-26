@@ -63,26 +63,6 @@
     "image": null
   },
   {
-    "id": "dark-room-naturals",
-    "name": "Dark Room Naturals",
-    "roasterId": "coffeeverse",
-    "origin": "",
-    "region": "",
-    "roastLevel": "",
-    "process": "",
-    "variety": "",
-    "status": "current",
-    "dateAdded": "2026-03-25",
-    "dateFinished": null,
-    "tasteTags": [],
-    "description": "",
-    "cost": null,
-    "roastDate": null,
-    "dialInNotes": null,
-    "bagOpened": false,
-    "image": null
-  },
-  {
     "id": "dunduga-estate-washed-naivo-coffee-company",
     "name": "Dunduga Estate Washed - Naivo Coffee Company",
     "roasterId": "navio",
