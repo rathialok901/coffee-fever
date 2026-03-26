@@ -1,5 +1,34 @@
 [
   {
+    "id": "entry-1774495658712-7rih",
+    "date": "2026-03-26",
+    "coffeeId": "coorg-naturals",
+    "recipeId": "clever-dripper-recipe",
+    "beanName": "Coorg Naturals",
+    "roasterId": "humble-bean",
+    "roasterName": "Humble Bean",
+    "origin": "",
+    "roastLevel": "Medium",
+    "brewMethod": "Clever Dripper",
+    "grindClicks": 69,
+    "grindLabel": "Medium",
+    "dose": "20g",
+    "water": "320ml",
+    "ratio": null,
+    "waterTemp": "93°C",
+    "totalTime": "3:30",
+    "scores": {
+      "acidity": 5,
+      "body": 5,
+      "sweetness": 5,
+      "finish": 5
+    },
+    "overallRating": null,
+    "tasteTags": [],
+    "notes": "",
+    "image": null
+  },
+  {
     "id": "entry-1774467402352-q81r",
     "date": "2026-03-25",
     "coffeeId": "coorg-naturals",
