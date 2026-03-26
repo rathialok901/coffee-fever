@@ -378,6 +378,12 @@ function openAdminPanel() {
       $('patStatus').textContent = '✓ Token saved';
       $('patStatus').className = 'admin-pat-status ok';
     }
+    const savedAnthropicKey = localStorage.getItem('cf_anthropic_key');
+    if (savedAnthropicKey) {
+      $('anthropicKeyInput').value = '••••••••••••';
+      $('anthropicKeyStatus').textContent = '✓ Key saved — URL import active';
+      $('anthropicKeyStatus').className = 'admin-pat-status ok';
+    }
   } else {
     $('adminLoginSection').style.display = 'block';
     $('adminControls').style.display = 'none';
@@ -1495,11 +1501,26 @@ function openCoffeeForm(existing = null) {
     `<option value="${r.id}" ${c.roasterId === r.id ? 'selected' : ''}>${r.name}</option>`
   ).join('');
 
+  const hasAnthropicKey = !!localStorage.getItem('cf_anthropic_key');
+
   $('modalBody').innerHTML = `
     <h2 style="font-family:var(--font-display);font-size:1.5rem;color:var(--text);margin-bottom:1.5rem;">
       ${isEdit ? 'Edit Coffee' : 'Add Coffee'}
     </h2>
     <div class="admin-form" id="coffeeForm">
+      ${!isEdit && hasAnthropicKey ? `
+      <div class="import-url-section">
+        <label class="form-label" style="display:flex;align-items:center;gap:0.4rem;">
+          <span>🔗</span> Import from URL
+          <span style="font-size:0.72rem;color:var(--text-muted);font-weight:400;font-style:italic;">— paste any roaster product page</span>
+        </label>
+        <div class="import-url-row">
+          <input class="form-input" type="url" id="importUrl" placeholder="https://bluetokaicoffee.com/products/attikan-estate…" />
+          <button class="btn-secondary" type="button" id="importUrlBtn" onclick="importCoffeeFromUrl()">Look up</button>
+        </div>
+        <p class="import-url-status" id="importUrlStatus"></p>
+      </div>
+      ` : ''}
       <div class="form-row">
         <div class="form-field">
           <label class="form-label">Bean Name <span>*</span></label>
@@ -2532,6 +2553,128 @@ function handleSearch(q) {
   renderSection(state.activeSection);
 }
 
+// ---- IMPORT COFFEE FROM URL ----
+async function importCoffeeFromUrl() {
+  const url = ($('importUrl') || {}).value?.trim();
+  if (!url) { showToast('Paste a URL first', 'error'); return; }
+
+  const apiKey = localStorage.getItem('cf_anthropic_key');
+  if (!apiKey) { showToast('Add your Anthropic API key in Admin settings first', 'error'); return; }
+
+  const btn = $('importUrlBtn');
+  const status = $('importUrlStatus');
+  btn.disabled = true;
+  btn.textContent = '⏳ Fetching…';
+  status.textContent = 'Fetching page…';
+  status.style.color = 'var(--text-muted)';
+
+  try {
+    // Step 1: Fetch page HTML via CORS proxy
+    const proxyRes = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
+    if (!proxyRes.ok) throw new Error('Could not fetch the page. Check the URL and try again.');
+    const proxyData = await proxyRes.json();
+    const html = proxyData.contents || '';
+    if (!html) throw new Error('Page returned empty content.');
+
+    status.textContent = 'Asking Claude to extract details…';
+
+    // Step 2: Ask Claude Haiku to extract coffee details
+    const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1024,
+        messages: [{
+          role: 'user',
+          content: `Extract coffee product details from this webpage HTML. Return ONLY valid JSON with no markdown fences, no explanation.
+Use null for any field you cannot confidently determine from the page.
+
+JSON format:
+{
+  "name": "coffee name only (not brand name)",
+  "roasterName": "roaster or brand name",
+  "origin": "country of origin",
+  "region": "specific growing region if mentioned, else null",
+  "process": "one of: Washed, Natural, Honey, Anaerobic, Wet-Hulled — or null",
+  "roastLevel": "one of: Light, Medium-Light, Medium, Medium-Dark, Dark — or null",
+  "variety": "coffee cultivar/variety if mentioned, else null",
+  "beanType": "one of: Arabica, Robusta, Liberica, Blend — or null",
+  "description": "product description trimmed to 300 chars",
+  "tasteTags": ["tasting note 1", "tasting note 2"],
+  "priceINR": price_as_number_if_in_rupees_else_null
+}
+
+HTML (first 20000 chars):
+${html.substring(0, 20000)}`
+        }]
+      })
+    });
+
+    if (!claudeRes.ok) {
+      const err = await claudeRes.json().catch(() => ({}));
+      if (claudeRes.status === 401) throw new Error('Invalid Anthropic API key — check it in Admin settings');
+      throw new Error(err.error?.message || `Claude API error: HTTP ${claudeRes.status}`);
+    }
+
+    const claudeData = await claudeRes.json();
+    const text = claudeData.content?.[0]?.text || '';
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('Could not parse coffee details from the page.');
+    const d = JSON.parse(jsonMatch[0]);
+
+    // Step 3: Fill in form fields
+    if (d.name)        { const el = $('cName');        if (el) el.value = d.name; }
+    if (d.origin)      { const el = $('cOrigin');      if (el) el.value = d.origin; }
+    if (d.region)      { const el = $('cRegion');      if (el) el.value = d.region; }
+    if (d.variety)     { const el = $('cVariety');     if (el) el.value = d.variety; }
+    if (d.description) { const el = $('cDescription'); if (el) el.value = d.description; }
+    if (d.tasteTags?.length) { const el = $('cTasteTags'); if (el) el.value = d.tasteTags.join(', '); }
+    if (d.priceINR)    { const el = $('cCost');        if (el) el.value = d.priceINR; }
+
+    const selectMatch = (id, val) => {
+      if (!val) return;
+      const sel = $(id);
+      if (!sel) return;
+      const opt = Array.from(sel.options).find(o => o.value === val || o.text === val);
+      if (opt) sel.value = opt.value;
+    };
+    selectMatch('cProcess',    d.process);
+    selectMatch('cRoastLevel', d.roastLevel);
+    selectMatch('cBeanType',   d.beanType);
+
+    // Try to match roaster
+    let roasterMsg = '';
+    if (d.roasterName) {
+      const match = state.roasters.find(r =>
+        r.name.toLowerCase().includes(d.roasterName.toLowerCase()) ||
+        d.roasterName.toLowerCase().includes(r.name.toLowerCase().split(' ')[0])
+      );
+      if (match) {
+        const sel = $('cRoasterId');
+        if (sel) sel.value = match.id;
+        roasterMsg = '';
+      } else {
+        roasterMsg = ` Roaster "${d.roasterName}" not in your list — use + Add new roaster below.`;
+      }
+    }
+
+    status.textContent = '✓ Fields filled! Review everything before saving.' + roasterMsg;
+    status.style.color = 'var(--green)';
+
+  } catch (err) {
+    status.textContent = '✗ ' + err.message;
+    status.style.color = 'var(--red)';
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Look up'; }
+  }
+}
+
 // ---- SECTION: DISPATCHES ----
 function renderDispatches() {
   const grid = $('dispatchesGrid');
@@ -2888,6 +3031,19 @@ document.addEventListener('DOMContentLoaded', () => {
     $('patStatus').className = 'admin-pat-status ok';
     $('githubTokenInput').value = '••••••••••••';
     showToast('GitHub token saved', 'success');
+  });
+
+  $('saveAnthropicKeyBtn').addEventListener('click', () => {
+    const key = $('anthropicKeyInput').value.trim();
+    if (!key || key === '••••••••••••') {
+      showToast('Please enter your Anthropic API key', 'error');
+      return;
+    }
+    localStorage.setItem('cf_anthropic_key', key);
+    $('anthropicKeyStatus').textContent = '✓ Key saved — URL import active';
+    $('anthropicKeyStatus').className = 'admin-pat-status ok';
+    $('anthropicKeyInput').value = '••••••••••••';
+    showToast('Anthropic key saved', 'success');
   });
 
   // Admin section add buttons

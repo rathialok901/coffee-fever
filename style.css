@@ -1558,6 +1558,24 @@ body {
 .brew-details-panel { display: none; }
 .brew-details-panel.open { display: block; }
 
+/* ---- IMPORT FROM URL ---- */
+.import-url-section {
+  background: linear-gradient(135deg, rgba(200,149,107,0.06), rgba(200,149,107,0.02));
+  border: 1.5px dashed var(--accent);
+  border-radius: var(--radius-sm);
+  padding: 1rem 1.1rem;
+  margin-bottom: 1.25rem;
+}
+.import-url-row {
+  display: flex; gap: 0.5rem; margin-top: 0.4rem;
+}
+.import-url-row .form-input { flex: 1; }
+.import-url-status {
+  font-size: 0.8rem; margin-top: 0.4rem;
+  color: var(--text-muted); min-height: 1.1em;
+  line-height: 1.4;
+}
+
 /* ---- PAGINATION ---- */
 .pagination {
   display: flex; align-items: center; justify-content: center;
