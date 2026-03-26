@@ -23,7 +23,7 @@ const state = {
   journal:  [],
   recipes:  [],
   coffees:  [],
-  activeSection: 'journal',
+  activeSection: 'catalog',
   search:   '',
   filters:  { coffee: '', roaster: '', roastLevel: '', method: '', taste: '', days: '7' },
   catalogStatus: 'current',
@@ -281,6 +281,7 @@ async function loadAll() {
   populateFilters();
   updateStatStrip();
   renderSection(state.activeSection);
+  updateBottomNav(state.activeSection);
 }
 
 // ---- ADMIN MODE ----
@@ -294,6 +295,8 @@ function setAdminMode(active) {
   const btn = $('adminLockBtn');
   btn.textContent = active ? '🔓' : '🔒';
   btn.classList.toggle('unlocked', active);
+  const bnl = $('bottomNavLockIcon');
+  if (bnl) bnl.textContent = active ? '🔓' : '🔒';
   // Admin badge in search bar
   const badge = $('adminBadge');
   badge.style.display = active ? 'flex' : 'none';
@@ -399,8 +402,18 @@ function setSection(name) {
   if (sec) sec.classList.add('active');
   const link = document.querySelector(`.nav-link[data-section="${name}"]`);
   if (link) link.classList.add('active');
-  $('mainNav').classList.remove('open');
+  $('mainNav')?.classList.remove('open');
+  updateBottomNav(name);
   renderSection(name);
+}
+
+function updateBottomNav(name) {
+  document.querySelectorAll('.bottom-nav-item[data-section]').forEach(el => {
+    el.classList.toggle('active', el.dataset.section === name);
+  });
+  // Keep lock icon in sync
+  const lockIcon = $('bottomNavLockIcon');
+  if (lockIcon) lockIcon.textContent = state.adminMode ? '🔓' : '🔒';
 }
 
 function renderSection(name) {
@@ -644,6 +657,12 @@ function buildCoffeeCard(c) {
   const journalCount = state.journal.filter(e => e.coffeeId === c.id).length;
   const lasted = c.status === 'past' ? daysLasted(c.dateAdded, c.dateFinished) : null;
 
+  // Use roaster image as fallback if coffee has no image
+  const roasterFallbackImg = !c.image && c.roasterId
+    ? (state.roasters.find(r => r.id === c.roasterId)?.image || null)
+    : null;
+  const displayImage = c.image || roasterFallbackImg;
+
   const div = document.createElement('div');
   div.className = 'coffee-card';
 
@@ -664,13 +683,14 @@ function buildCoffeeCard(c) {
     : `<span class="status-past">Finished</span>`;
 
   div.innerHTML = `
-    ${buildCardImage(c.image, c.name)}
+    ${buildCardImage(displayImage, c.name)}
     <div class="coffee-card-body">
       <div class="coffee-card-name">${highlight(c.name, q)}</div>
       <div class="coffee-card-roaster">${highlight(roasterName, q)}</div>
       <div class="coffee-card-meta">
         ${c.roastLevel ? `<span class="roast-badge">${c.roastLevel}</span>` : ''}
         ${c.process ? `<span class="coffee-process-tag">${c.process}</span>` : ''}
+        ${c.beanType ? `<span class="bean-type-tag">${c.beanType}</span>` : ''}
         ${statusBadge}
         ${lasted ? `<span class="lasted-chip">${lasted}d</span>` : ''}
         ${freshness ? `<span class="freshness-chip ${freshness.cls}">${freshness.label}</span>` : ''}
@@ -739,6 +759,7 @@ function openCoffeeModal(c) {
         ['Roast Level', c.roastLevel],
         ['Process',     c.process],
         ['Variety',     c.variety],
+        ['Bean Type',   c.beanType],
         ['Added',       formatDate(c.dateAdded)],
         ['Roast Date',  c.roastDate ? formatDate(c.roastDate) : null],
         ['Finished',    c.dateFinished ? formatDate(c.dateFinished) : null],
@@ -1400,6 +1421,23 @@ function openCoffeeForm(existing = null) {
             <option value="">Select roaster…</option>
             ${roasterOptions}
           </select>
+          <button class="btn-link" type="button" onclick="toggleInlineRoasterForm()" id="addRoasterToggle">＋ Add new roaster</button>
+          <div id="inlineRoasterForm" style="display:none;background:var(--surface);border-radius:var(--radius-sm);padding:1rem;margin-top:0.5rem;border:1px solid var(--border);">
+            <div class="form-row" style="margin-bottom:0.75rem;">
+              <div class="form-field">
+                <label class="form-label">Roaster Name *</label>
+                <input class="form-input" type="text" id="irName" placeholder="e.g. Blue Tokai" />
+              </div>
+              <div class="form-field">
+                <label class="form-label">Location (optional)</label>
+                <input class="form-input" type="text" id="irLocation" placeholder="e.g. Bangalore, India" />
+              </div>
+            </div>
+            <div style="display:flex;gap:0.5rem;justify-content:flex-end;">
+              <button class="btn-secondary" type="button" onclick="toggleInlineRoasterForm()">Cancel</button>
+              <button class="btn-primary" type="button" id="irSaveBtn" onclick="saveInlineRoaster()">Save Roaster</button>
+            </div>
+          </div>
         </div>
       </div>
       <div class="form-row">
@@ -1436,6 +1474,16 @@ function openCoffeeForm(existing = null) {
           <input class="form-input" type="text" id="cVariety" placeholder="e.g. S795, Catuai" value="${c.variety||''}" />
         </div>
         <div class="form-field">
+          <label class="form-label">Bean Type</label>
+          <select class="form-select" id="cBeanType">
+            <option value="">Select…</option>
+            ${['Arabica','Robusta','Liberica','Excelsa','Blend']
+              .map(bt => `<option ${c.beanType===bt?'selected':''}>${bt}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field" style="flex:1;">
           <label class="form-label">Status</label>
           <select class="form-select" id="cStatus">
             <option value="current" ${(c.status||'current')==='current'?'selected':''}>In Stock (Current)</option>
@@ -1531,6 +1579,7 @@ async function saveCoffee(existingId) {
       roastLevel:   $('cRoastLevel').value,
       process:      $('cProcess').value,
       variety:      $('cVariety').value.trim(),
+      beanType:     $('cBeanType').value || null,
       status:       $('cStatus').value,
       dateAdded:    $('cDateAdded').value,
       dateFinished: $('cDateFinished').value || null,
@@ -1676,6 +1725,47 @@ async function saveRoaster(existingId) {
   } catch (err) {
     $('rSaving').style.display = 'none';
     showToast(err.message, 'error');
+  }
+}
+
+function toggleInlineRoasterForm() {
+  const form = $('inlineRoasterForm');
+  if (!form) return;
+  form.style.display = form.style.display === 'none' ? '' : 'none';
+  if (form.style.display !== 'none') $('irName').focus();
+}
+
+async function saveInlineRoaster() {
+  const name = $('irName').value.trim();
+  if (!name) { showToast('Enter a roaster name', 'error'); return; }
+  const btn = $('irSaveBtn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    const roaster = {
+      id:       slugify(name),
+      name,
+      location: $('irLocation').value.trim() || null,
+      website:  null,
+      description: null,
+      image:    null
+    };
+    const updated = [...state.roasters, roaster];
+    await writeDataFile('roasters.json', updated, `Add roaster: ${name}`);
+    state.roasters = updated;
+    // Add new option to the dropdown and select it
+    const sel = $('cRoasterId');
+    if (sel) {
+      const opt = document.createElement('option');
+      opt.value = roaster.id; opt.textContent = roaster.name;
+      sel.appendChild(opt);
+      sel.value = roaster.id;
+    }
+    toggleInlineRoasterForm();
+    showToast('Roaster added!', 'success');
+  } catch (err) {
+    showToast(err.message, 'error');
+  } finally {
+    if ($('irSaveBtn')) { $('irSaveBtn').disabled = false; $('irSaveBtn').textContent = 'Save Roaster'; }
   }
 }
 
@@ -2156,6 +2246,190 @@ function renderSpend() {
   `;
 }
 
+// ---- QUICK LOG ----
+function openQuickLogForm() {
+  const lastEntry = state.journal.length
+    ? [...state.journal].sort((a,b) => b.date.localeCompare(a.date))[0]
+    : null;
+  const today = new Date().toISOString().split('T')[0];
+
+  const currentCoffees = state.coffees.filter(c => c.status === 'current');
+  const coffeeOptions = [
+    ...currentCoffees.map(c =>
+      `<option value="${c.id}" ${lastEntry?.coffeeId === c.id ? 'selected' : ''}>${c.name}</option>`
+    ),
+    ...state.coffees.filter(c => c.status !== 'current').map(c =>
+      `<option value="${c.id}" ${lastEntry?.coffeeId === c.id && !currentCoffees.find(x=>x.id===c.id) ? 'selected' : ''}>${c.name} (past)</option>`
+    )
+  ].join('');
+
+  const brewMethods = ['V60 / Pour Over','French Press','Moka Pot','South Indian Filter','Clever Dripper','Basic Home Espresso'];
+  const methodOptions = brewMethods.map(m =>
+    `<option ${lastEntry?.brewMethod === m ? 'selected' : ''}>${m}</option>`
+  ).join('');
+
+  const tasteTags = ['Fruity','Chocolatey','Nutty','Caramel','Citrus','Floral','Earthy','Brown Sugar','Spicy','Bright','Smooth','Complex'];
+  const lastTags = lastEntry?.tasteTags || [];
+
+  const prevRating = lastEntry?.overallRating || 4;
+
+  $('modalBody').innerHTML = `
+    <h2 style="font-family:var(--font-display);font-size:1.4rem;margin-bottom:1.25rem;">Quick Log ☕</h2>
+    <div class="admin-form" id="quickLogForm">
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label">Date</label>
+          <input class="form-input" type="date" id="qlDate" value="${today}" />
+        </div>
+        <div class="form-field">
+          <label class="form-label">Brew Method</label>
+          <select class="form-select" id="qlMethod">
+            ${methodOptions}
+          </select>
+        </div>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Coffee</label>
+        <select class="form-select" id="qlCoffeeId" onchange="handleQuickLogCoffeeSelect(this.value)">
+          <option value="">— Select coffee —</option>
+          ${coffeeOptions}
+        </select>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Rating <span style="color:var(--accent-dark);font-size:0.75rem;font-style:italic;font-weight:400;">(required)</span></label>
+        <div class="star-rating-input">
+          ${[5,4,3,2,1].map(n =>
+            `<input type="radio" name="qlRating" id="qlStar${n}" value="${n}" ${prevRating===n?'checked':''} />
+             <label for="qlStar${n}">★</label>`
+          ).join('')}
+        </div>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Taste</label>
+        <div class="quick-log-taste-chips" id="qlTasteChips">
+          ${tasteTags.map(t => `
+            <button type="button" class="quick-log-chip ${lastTags.includes(t)?'selected':''}"
+              onclick="this.classList.toggle('selected')">${t}</button>
+          `).join('')}
+        </div>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Notes</label>
+        <textarea class="form-textarea" id="qlNotes" placeholder="How was it?" style="min-height:60px;"></textarea>
+      </div>
+
+      <button class="brew-details-toggle" type="button" onclick="toggleBrewDetails()">
+        <span id="brewDetailsArrow">▶</span> Brew details
+      </button>
+      <div class="brew-details-panel" id="brewDetailsPanel">
+        <div class="form-row">
+          <div class="form-field">
+            <label class="form-label">Dose</label>
+            <input class="form-input" type="text" id="qlDose" placeholder="e.g. 18g" value="${lastEntry?.dose||''}" />
+          </div>
+          <div class="form-field">
+            <label class="form-label">Water</label>
+            <input class="form-input" type="text" id="qlWater" placeholder="e.g. 300ml" value="${lastEntry?.water||''}" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label class="form-label">Temp</label>
+            <input class="form-input" type="text" id="qlTemp" placeholder="e.g. 94°C" value="${lastEntry?.waterTemp||''}" />
+          </div>
+          <div class="form-field">
+            <label class="form-label">Time</label>
+            <input class="form-input" type="text" id="qlTime" placeholder="e.g. 3:30" value="${lastEntry?.totalTime||''}" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label class="form-label">Grind Clicks</label>
+            <input class="form-input" type="number" id="qlGrindClicks" placeholder="e.g. 24" value="${lastEntry?.grindClicks||''}" />
+          </div>
+          <div class="form-field">
+            <label class="form-label">Grind Label</label>
+            <input class="form-input" type="text" id="qlGrindLabel" placeholder="e.g. Medium-Fine" value="${lastEntry?.grindLabel||''}" />
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <div class="form-saving" id="qlSaving" style="display:none;">☕ Saving…</div>
+        <button class="btn-secondary" type="button" onclick="closeModal()">Cancel</button>
+        <button class="btn-primary" type="button" onclick="saveQuickLog()">Log Cup</button>
+      </div>
+    </div>
+  `;
+  $('modalOverlay').classList.add('active');
+
+  // Auto-fill bean name from selected coffee
+  const preselectedId = $('qlCoffeeId').value;
+  if (preselectedId) handleQuickLogCoffeeSelect(preselectedId);
+}
+
+function handleQuickLogCoffeeSelect(coffeeId) {
+  const coffee = state.coffees.find(c => c.id === coffeeId);
+  if (!coffee) return;
+  // Pre-fill brew method from dial-in notes? Just leave as-is (last entry method already selected)
+}
+
+function toggleBrewDetails() {
+  const panel = $('brewDetailsPanel');
+  const arrow = $('brewDetailsArrow');
+  const isOpen = panel.classList.toggle('open');
+  if (arrow) arrow.textContent = isOpen ? '▼' : '▶';
+}
+
+async function saveQuickLog() {
+  const ratingEl = document.querySelector('input[name="qlRating"]:checked');
+  if (!ratingEl) { showToast('Please select a rating', 'error'); return; }
+
+  const coffeeId = $('qlCoffeeId').value || null;
+  const coffee = coffeeId ? state.coffees.find(c => c.id === coffeeId) : null;
+
+  const tasteTags = Array.from(document.querySelectorAll('.quick-log-chip.selected'))
+    .map(el => el.textContent.trim());
+
+  const entry = {
+    id:           generateId('entry'),
+    date:         $('qlDate').value || new Date().toISOString().split('T')[0],
+    coffeeId:     coffeeId,
+    beanName:     coffee?.name || '',
+    roasterId:    coffee?.roasterId || null,
+    roasterName:  coffee?.roasterId ? (state.roasters.find(r => r.id === coffee.roasterId)?.name || '') : '',
+    origin:       coffee?.origin || '',
+    roastLevel:   coffee?.roastLevel || '',
+    brewMethod:   $('qlMethod').value,
+    grindClicks:  $('qlGrindClicks').value ? parseInt($('qlGrindClicks').value) : null,
+    grindLabel:   $('qlGrindLabel').value.trim() || '',
+    dose:         $('qlDose').value.trim() || '',
+    water:        $('qlWater').value.trim() || '',
+    ratio:        null,
+    waterTemp:    $('qlTemp').value.trim() || '',
+    totalTime:    $('qlTime').value.trim() || '',
+    scores:       { acidity: 5, body: 5, sweetness: 5, finish: 5 },
+    overallRating: parseInt(ratingEl.value),
+    tasteTags,
+    notes:        $('qlNotes').value.trim() || '',
+    image:        null
+  };
+
+  $('qlSaving').style.display = 'flex';
+  try {
+    const updated = [...state.journal, entry];
+    await writeDataFile('journal.json', updated, `☕ Quick log: ${entry.beanName || entry.brewMethod}`);
+    state.journal = updated;
+    updateStatStrip();
+    closeModal();
+    if (state.activeSection === 'journal') renderJournal();
+    showToast('Logged!', 'success');
+  } catch (err) {
+    $('qlSaving').style.display = 'none';
+    showToast(err.message, 'error');
+  }
+}
+
 // ---- SEARCH ----
 function handleSearch(q) {
   state.search = q;
@@ -2167,6 +2441,7 @@ function handleSearch(q) {
 document.addEventListener('DOMContentLoaded', () => {
   loadAll();
   initAdmin();
+  updateBottomNav('catalog');
 
   // Nav links
   document.querySelectorAll('.nav-link').forEach(link => {
@@ -2176,10 +2451,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Hamburger
-  $('hamburger').addEventListener('click', () => {
-    $('mainNav').classList.toggle('open');
-  });
+  // Hamburger (may not exist in all layouts)
+  const hamburgerEl = $('hamburger');
+  if (hamburgerEl) {
+    hamburgerEl.addEventListener('click', () => {
+      $('mainNav')?.classList.toggle('open');
+    });
+  }
 
   // Search
   const searchEl = $('globalSearch');

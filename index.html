@@ -23,8 +23,8 @@
         </div>
       </div>
       <nav class="main-nav" id="mainNav">
-        <a href="#" class="nav-link active" data-section="journal">Cup Notes</a>
-        <a href="#" class="nav-link" data-section="catalog">Coffee</a>
+        <a href="#" class="nav-link" data-section="journal">Cup Notes</a>
+        <a href="#" class="nav-link active" data-section="catalog">Coffee</a>
         <a href="#" class="nav-link" data-section="gear">Gear</a>
         <a href="#" class="nav-link" data-section="recipes">Recipes</a>
         <a href="#" class="nav-link admin-only" data-section="spend" style="display:none;">Spend</a>
@@ -32,9 +32,6 @@
       </nav>
       <div class="header-actions">
         <button class="admin-lock-btn" id="adminLockBtn" aria-label="Admin panel" title="Admin">🔒</button>
-        <button class="hamburger" id="hamburger" aria-label="Menu">
-          <span></span><span></span><span></span>
-        </button>
       </div>
     </div>
   </header>
@@ -57,7 +54,7 @@
   <main class="main-content" id="mainContent">
 
     <!-- ====== JOURNAL SECTION ====== -->
-    <section class="section active" id="section-journal">
+    <section class="section" id="section-journal">
 
       <!-- Stat Strip -->
       <div class="stat-strip" id="statStrip">
@@ -154,7 +151,7 @@
     </section>
 
     <!-- ====== COFFEE CATALOG SECTION ====== -->
-    <section class="section" id="section-catalog">
+    <section class="section active" id="section-catalog">
       <div class="section-header">
         <div>
           <h2 class="section-title">Coffee</h2>
@@ -255,6 +252,11 @@
       <div id="spendContent"></div>
     </section>
 
+    <!-- QUICK LOG FAB -->
+    <button class="quick-log-fab admin-only" id="quickLogFab" style="display:none;" onclick="openQuickLogForm()" aria-label="Quick log a cup">
+      ☕ <span class="fab-label">Log</span>
+    </button>
+
   </main>
 
   <!-- ====== ADMIN PANEL ====== -->
@@ -307,6 +309,25 @@
   <footer class="site-footer">
     <p>Coffee Fever · Built by <a href="https://github.com/rathialok901" target="_blank" rel="noopener">rathialok901</a></p>
   </footer>
+
+  <!-- BOTTOM NAV (mobile only) -->
+  <nav class="bottom-nav" id="bottomNav">
+    <a class="bottom-nav-item" data-section="catalog" onclick="setSection('catalog');updateBottomNav('catalog');return false;" href="#">
+      <span class="nav-icon">☕</span><span>Coffee</span>
+    </a>
+    <a class="bottom-nav-item" data-section="journal" onclick="setSection('journal');updateBottomNav('journal');return false;" href="#">
+      <span class="nav-icon">📓</span><span>Cup Notes</span>
+    </a>
+    <a class="bottom-nav-item" data-section="gear" onclick="setSection('gear');updateBottomNav('gear');return false;" href="#">
+      <span class="nav-icon">⚙️</span><span>Gear</span>
+    </a>
+    <a class="bottom-nav-item" data-section="recipes" onclick="setSection('recipes');updateBottomNav('recipes');return false;" href="#">
+      <span class="nav-icon">📋</span><span>Recipes</span>
+    </a>
+    <a class="bottom-nav-item" id="bottomNavAdmin" onclick="openAdminPanel();return false;" href="#">
+      <span class="nav-icon" id="bottomNavLockIcon">🔒</span><span>Admin</span>
+    </a>
+  </nav>
 
   <script src="app.js"></script>
 </body>
