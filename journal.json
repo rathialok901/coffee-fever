@@ -88,5 +88,37 @@
     ],
     "notes": "",
     "image": null
+  },
+  {
+    "id": "entry-1774521025379-f6nh",
+    "date": "2026-03-26",
+    "coffeeId": "amaltas-blend",
+    "beanName": "Amaltas Blend",
+    "roasterId": "blue-tokai",
+    "roasterName": "Blue Tokai Coffee Roasters",
+    "origin": "Chikmagalur",
+    "roastLevel": "",
+    "brewMethod": "V60 / Pour Over",
+    "grindClicks": 76,
+    "grindLabel": "Medium",
+    "dose": "20g",
+    "water": "320ml",
+    "ratio": null,
+    "waterTemp": "93°C",
+    "totalTime": "4:20",
+    "scores": {
+      "acidity": 5,
+      "body": 5,
+      "sweetness": 5,
+      "finish": 5
+    },
+    "overallRating": 4,
+    "tasteTags": [
+      "Fruity",
+      "Chocolatey",
+      "Citrus"
+    ],
+    "notes": "",
+    "image": null
   }
 ]
