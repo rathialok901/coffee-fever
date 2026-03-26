@@ -16,6 +16,8 @@ const GEAR_TO_METHOD = {
 const GITHUB_REPO   = 'coffee-fever';
 const GITHUB_BRANCH = 'main';
 
+const PAGE_SIZE = { catalog: 9, journal: 9, gear: 6, recipes: 12 };
+
 // ---- STATE ----
 const state = {
   gear:     [],
@@ -29,7 +31,8 @@ const state = {
   catalogStatus: 'current',
   catalogFilters: { roaster: '', roastLevel: '', process: '' },
   recipeFilter: '',
-  adminMode: false
+  adminMode: false,
+  pages: { catalog: 1, journal: 1, gear: 1, recipes: 1 }
 };
 
 // ---- UTILITIES ----
@@ -94,6 +97,46 @@ function calcBrewStreak() {
 
 function slugify(str) {
   return str.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
+// ---- PAGINATION ----
+function setPage(section, page) {
+  state.pages[section] = page;
+  renderSection(section);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function buildPagination(total, section) {
+  const size = PAGE_SIZE[section] || 9;
+  const current = state.pages[section] || 1;
+  const totalPages = Math.ceil(total / size);
+  if (totalPages <= 1) return '';
+
+  const start = (current - 1) * size + 1;
+  const end = Math.min(current * size, total);
+
+  let pages = [];
+  // Always show first, last, and current ±1
+  const range = new Set([1, totalPages, current, current - 1, current + 1].filter(p => p >= 1 && p <= totalPages));
+  const sorted = [...range].sort((a, b) => a - b);
+  let prev = 0;
+  for (const p of sorted) {
+    if (p - prev > 1) pages.push('…');
+    pages.push(p);
+    prev = p;
+  }
+
+  const pageButtons = pages.map(p => p === '…'
+    ? `<span class="pagination-info">…</span>`
+    : `<button class="pagination-btn ${p === current ? 'active' : ''}" onclick="setPage('${section}', ${p})">${p}</button>`
+  ).join('');
+
+  return `<div class="pagination">
+    <button class="pagination-btn" onclick="setPage('${section}', ${current - 1})" ${current === 1 ? 'disabled' : ''}>← Prev</button>
+    ${pageButtons}
+    <button class="pagination-btn" onclick="setPage('${section}', ${current + 1})" ${current === totalPages ? 'disabled' : ''}>Next →</button>
+    <span class="pagination-info">${start}–${end} of ${total}</span>
+  </div>`;
 }
 
 function getTasteClass(tag) {
@@ -495,9 +538,12 @@ function getFilteredJournal() {
 function renderJournal() {
   const grid = $('journalGrid');
   const empty = $('journalEmpty');
-  const entries = getFilteredJournal();
+  const entries = getFilteredJournal().sort((a, b) => b.date.localeCompare(a.date));
 
   Array.from(grid.children).forEach(c => { if (c !== empty) c.remove(); });
+  // Remove old pagination
+  const oldPag = $('journalPagination');
+  if (oldPag) oldPag.remove();
 
   if (entries.length === 0) {
     empty.style.display = 'block';
@@ -505,10 +551,21 @@ function renderJournal() {
   }
   empty.style.display = 'none';
 
-  entries.forEach(e => {
+  const page = state.pages.journal || 1;
+  const size = PAGE_SIZE.journal;
+  const sliced = entries.slice((page - 1) * size, page * size);
+
+  sliced.forEach(e => {
     const card = buildJournalCard(e);
     grid.appendChild(card);
   });
+
+  if (entries.length > size) {
+    const pag = document.createElement('div');
+    pag.id = 'journalPagination';
+    pag.innerHTML = buildPagination(entries.length, 'journal');
+    grid.parentElement.appendChild(pag);
+  }
 }
 
 function buildJournalCard(e) {
@@ -634,6 +691,8 @@ function renderCatalog() {
   });
 
   Array.from(grid.children).forEach(c => { if (c !== empty) c.remove(); });
+  const oldPag = $('catalogPagination');
+  if (oldPag) oldPag.remove();
 
   if (filtered.length === 0) {
     empty.style.display = 'block';
@@ -644,10 +703,21 @@ function renderCatalog() {
   }
   empty.style.display = 'none';
 
-  filtered.forEach(c => {
+  const page = state.pages.catalog || 1;
+  const size = PAGE_SIZE.catalog;
+  const sliced = filtered.slice((page - 1) * size, page * size);
+
+  sliced.forEach(c => {
     const card = buildCoffeeCard(c);
     grid.appendChild(card);
   });
+
+  if (filtered.length > size) {
+    const pag = document.createElement('div');
+    pag.id = 'catalogPagination';
+    pag.innerHTML = buildPagination(filtered.length, 'catalog');
+    grid.parentElement.appendChild(pag);
+  }
 }
 
 function buildCoffeeCard(c) {
@@ -943,7 +1013,23 @@ function renderGear() {
     return [g.name, g.type, g.description, ...(g.tags||[])].join(' ').toLowerCase().includes(q);
   });
 
-  filtered.forEach(g => {
+  const oldPag = $('gearPagination');
+  if (oldPag) oldPag.remove();
+
+  if (filtered.length === 0) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+      <div class="empty-icon">⚙️</div>
+      <h3>No gear found</h3>
+      <p>${state.adminMode ? 'Add gear above.' : 'No gear matches your search.'}</p>
+    </div>`;
+    return;
+  }
+
+  const page = state.pages.gear || 1;
+  const size = PAGE_SIZE.gear;
+  const sliced = filtered.slice((page - 1) * size, page * size);
+
+  sliced.forEach(g => {
     const card = document.createElement('div');
     card.className = 'gear-card';
 
@@ -970,12 +1056,11 @@ function renderGear() {
     grid.appendChild(card);
   });
 
-  if (filtered.length === 0) {
-    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
-      <div class="empty-icon">⚙️</div>
-      <h3>No gear found</h3>
-      <p>${state.adminMode ? 'Add gear above.' : 'No gear matches your search.'}</p>
-    </div>`;
+  if (filtered.length > size) {
+    const pag = document.createElement('div');
+    pag.id = 'gearPagination';
+    pag.innerHTML = buildPagination(filtered.length, 'gear');
+    grid.parentElement.appendChild(pag);
   }
 }
 
@@ -2434,6 +2519,10 @@ async function saveQuickLog() {
 function handleSearch(q) {
   state.search = q;
   $('searchClear').classList.toggle('visible', q.length > 0);
+  // Reset to page 1 when search changes
+  state.pages.catalog = 1;
+  state.pages.journal = 1;
+  state.pages.gear = 1;
   renderSection(state.activeSection);
 }
 
@@ -2480,6 +2569,7 @@ document.addEventListener('DOMContentLoaded', () => {
   Object.entries(filterMap).forEach(([id, key]) => {
     $(id).addEventListener('change', (e) => {
       state.filters[key] = e.target.value;
+      state.pages.journal = 1;
       renderJournal();
     });
   });
@@ -2487,6 +2577,7 @@ document.addEventListener('DOMContentLoaded', () => {
   $('filterReset').addEventListener('click', () => {
     Object.keys(filterMap).forEach(id => $(id).value = '');
     state.filters = { coffee: '', roaster: '', roastLevel: '', method: '', taste: '', days: '' };
+    state.pages.journal = 1;
     renderJournal();
   });
 
@@ -2502,6 +2593,7 @@ document.addEventListener('DOMContentLoaded', () => {
   Object.entries(catFilterMap).forEach(([id, key]) => {
     $(id).addEventListener('change', (e) => {
       state.catalogFilters[key] = e.target.value;
+      state.pages.catalog = 1;
       renderCatalog();
     });
   });
@@ -2509,6 +2601,7 @@ document.addEventListener('DOMContentLoaded', () => {
   $('catFilterReset').addEventListener('click', () => {
     Object.keys(catFilterMap).forEach(id => $(id).value = '');
     state.catalogFilters = { roaster: '', roastLevel: '', process: '' };
+    state.pages.catalog = 1;
     renderCatalog();
   });
 
@@ -2518,6 +2611,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.querySelectorAll('.catalog-tab').forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
       state.catalogStatus = tab.dataset.status;
+      state.pages.catalog = 1;
       renderCatalog();
     });
   });

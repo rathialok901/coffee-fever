@@ -1335,8 +1335,6 @@ body {
 :root { --sidebar-w: 220px; }
 
 @media (min-width: 900px) {
-  body { display: flex; }
-
   .site-header {
     position: fixed;
     top: 0; left: 0;
@@ -1393,12 +1391,18 @@ body {
     position: sticky;
     top: 0;
     z-index: 100;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 0.75rem 2rem;
   }
+
+  .search-bar-inner { max-width: 560px; }
 
   .main-content {
     margin-left: var(--sidebar-w);
     max-width: none;
     width: calc(100% - var(--sidebar-w));
+    box-sizing: border-box;
   }
 
   .site-footer { margin-left: var(--sidebar-w); }
@@ -1553,3 +1557,33 @@ body {
 }
 .brew-details-panel { display: none; }
 .brew-details-panel.open { display: block; }
+
+/* ---- PAGINATION ---- */
+.pagination {
+  display: flex; align-items: center; justify-content: center;
+  gap: 0.4rem; margin-top: 2.5rem; padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.pagination-btn {
+  background: var(--white); border: 1.5px solid var(--border);
+  color: var(--text-muted); padding: 0.4rem 0.875rem;
+  border-radius: var(--radius-xs); font-family: var(--font-body);
+  font-size: 0.875rem; cursor: pointer;
+  transition: all var(--transition);
+}
+.pagination-btn:hover:not(:disabled) {
+  border-color: var(--accent); color: var(--accent);
+  background: var(--accent-light);
+}
+.pagination-btn.active {
+  background: var(--text); color: var(--white);
+  border-color: var(--text); font-weight: 500;
+}
+.pagination-btn:disabled {
+  opacity: 0.3; cursor: not-allowed;
+}
+.pagination-info {
+  font-size: 0.8rem; color: var(--text-muted);
+  padding: 0 0.5rem; white-space: nowrap;
+}
