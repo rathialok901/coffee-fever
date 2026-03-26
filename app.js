@@ -16,7 +16,7 @@ const GEAR_TO_METHOD = {
 const GITHUB_REPO   = 'coffee-fever';
 const GITHUB_BRANCH = 'main';
 
-const PAGE_SIZE = { catalog: 9, journal: 9, gear: 6, recipes: 12 };
+const PAGE_SIZE = { catalog: 9, journal: 9, gear: 6, recipes: 12, dispatches: 9 };
 
 // ---- STATE ----
 const state = {
@@ -25,14 +25,16 @@ const state = {
   journal:  [],
   recipes:  [],
   coffees:  [],
+  posts:    [],
   activeSection: 'catalog',
   search:   '',
   filters:  { coffee: '', roaster: '', roastLevel: '', method: '', taste: '', days: '7' },
   catalogStatus: 'current',
   catalogFilters: { roaster: '', roastLevel: '', process: '' },
   recipeFilter: '',
+  dispatchFilter: '',
   adminMode: false,
-  pages: { catalog: 1, journal: 1, gear: 1, recipes: 1 }
+  pages: { catalog: 1, journal: 1, gear: 1, recipes: 1, dispatches: 1 }
 };
 
 // ---- UTILITIES ----
@@ -309,18 +311,20 @@ async function uploadImageFile(file, category, itemId) {
 
 // ---- DATA LOADING ----
 async function loadAll() {
-  const [gear, roasters, journal, recipes, coffees] = await Promise.all([
+  const [gear, roasters, journal, recipes, coffees, posts] = await Promise.all([
     loadJSON('gear.json'),
     loadJSON('roasters.json'),
     loadJSON('journal.json'),
     loadJSON('recipes.json'),
-    loadJSON('coffees.json')
+    loadJSON('coffees.json'),
+    loadJSON('posts.json')
   ]);
   state.gear     = gear;
   state.roasters = roasters;
   state.journal  = journal;
   state.recipes  = recipes;
   state.coffees  = coffees;
+  state.posts    = posts;
   populateFilters();
   updateStatStrip();
   renderSection(state.activeSection);
@@ -460,12 +464,13 @@ function updateBottomNav(name) {
 }
 
 function renderSection(name) {
-  if (name === 'journal')  renderJournal();
-  if (name === 'catalog')  { populateCatalogFilters(); renderCatalog(); }
-  if (name === 'gear')     renderGear();
-  if (name === 'recipes')  renderRecipes();
-  if (name === 'spend')    renderSpend();
-  if (name === 'insights') renderInsights();
+  if (name === 'journal')    renderJournal();
+  if (name === 'catalog')    { populateCatalogFilters(); renderCatalog(); }
+  if (name === 'gear')       renderGear();
+  if (name === 'recipes')    renderRecipes();
+  if (name === 'dispatches') renderDispatches();
+  if (name === 'spend')      renderSpend();
+  if (name === 'insights')   renderInsights();
 }
 
 // ---- STAT STRIP ----
@@ -2523,7 +2528,212 @@ function handleSearch(q) {
   state.pages.catalog = 1;
   state.pages.journal = 1;
   state.pages.gear = 1;
+  state.pages.dispatches = 1;
   renderSection(state.activeSection);
+}
+
+// ---- SECTION: DISPATCHES ----
+function renderDispatches() {
+  const grid = $('dispatchesGrid');
+  const empty = $('dispatchesEmpty');
+  if (!grid) return;
+
+  Array.from(grid.children).forEach(c => { if (c !== empty) c.remove(); });
+  const oldPag = $('dispatchesPagination');
+  if (oldPag) oldPag.remove();
+
+  const q = state.search.toLowerCase();
+  const cat = state.dispatchFilter;
+
+  const filtered = state.posts.filter(p => {
+    if (cat && p.category !== cat) return false;
+    if (q) {
+      const blob = [p.title, p.category, p.excerpt, p.body, ...(p.tags||[])].join(' ').toLowerCase();
+      if (!blob.includes(q)) return false;
+    }
+    return true;
+  }).sort((a, b) => b.date.localeCompare(a.date));
+
+  if (filtered.length === 0) {
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  const page = state.pages.dispatches || 1;
+  const size = 9;
+  const sliced = filtered.slice((page - 1) * size, page * size);
+
+  sliced.forEach(p => {
+    const card = buildPostCard(p);
+    grid.appendChild(card);
+  });
+
+  if (filtered.length > size) {
+    const pag = document.createElement('div');
+    pag.id = 'dispatchesPagination';
+    pag.innerHTML = buildPagination(filtered.length, 'dispatches');
+    grid.parentElement.appendChild(pag);
+  }
+}
+
+function buildPostCard(p) {
+  const q = state.search;
+  const card = document.createElement('div');
+  card.className = 'post-card';
+
+  const coverHtml = p.coverImage
+    ? `<div class="post-card-cover"><img src="${p.coverImage}" alt="${p.title}" loading="lazy" onerror="this.parentElement.innerHTML='<span class=post-card-cover-fallback>✍️</span>'" /></div>`
+    : `<div class="post-card-cover"><span class="post-card-cover-fallback">✍️</span></div>`;
+
+  card.innerHTML = `
+    ${coverHtml}
+    <div class="post-card-body">
+      ${p.category ? `<span class="post-category-badge">${p.category}</span>` : ''}
+      <div class="post-card-title">${highlight(p.title, q)}</div>
+      ${p.excerpt ? `<div class="post-card-excerpt">${highlight(p.excerpt, q)}</div>` : ''}
+    </div>
+    <div class="post-card-footer">
+      <span>${formatDate(p.date)}</span>
+      <span>${(p.tags||[]).slice(0,2).map(t=>`#${t}`).join(' ')}</span>
+    </div>
+  `;
+
+  card.addEventListener('click', (ev) => {
+    if (ev.target.closest('.card-edit-btn')) { ev.stopPropagation(); openPostForm(p); return; }
+    openPostModal(p);
+  });
+
+  return card;
+}
+
+function openPostModal(p) {
+  $('modalBody').innerHTML = `
+    ${p.coverImage ? `<img src="${p.coverImage}" class="modal-hero" alt="${p.title}" style="margin:-2rem -2rem 1.5rem;width:calc(100% + 4rem);max-height:260px;object-fit:cover;border-radius:var(--radius) var(--radius) 0 0;" />` : ''}
+    ${p.category ? `<div style="display:inline-block;font-size:0.68rem;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;padding:0.2rem 0.6rem;border-radius:4px;background:var(--surface);color:var(--text-muted);margin-bottom:0.75rem;">${p.category}</div>` : ''}
+    <h2 style="font-family:var(--font-display);font-size:1.65rem;color:var(--text);line-height:1.2;margin-bottom:0.5rem;">${p.title}</h2>
+    <p style="font-size:0.82rem;color:var(--text-light);margin-bottom:1.25rem;">${formatDate(p.date)}</p>
+    ${p.excerpt ? `<p style="font-size:0.95rem;color:var(--text-muted);font-style:italic;line-height:1.7;margin-bottom:1.25rem;padding-bottom:1.25rem;border-bottom:1px solid var(--border);">${p.excerpt}</p>` : ''}
+    <div class="post-body-text">${p.body || ''}</div>
+    ${(p.tags||[]).length ? `<div class="post-tags">${p.tags.map(t=>`<span class="post-tag">#${t}</span>`).join('')}</div>` : ''}
+    ${state.adminMode ? `
+      <div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);">
+        <button class="btn-secondary" onclick="openPostForm(window._modalPost)">✏️ Edit Post</button>
+      </div>
+    ` : ''}
+  `;
+  window._modalPost = p;
+  $('modalOverlay').classList.add('active');
+}
+
+function openPostForm(existing = null) {
+  const isEdit = !!existing;
+  const p = existing || {};
+
+  $('modalBody').innerHTML = `
+    <h2 style="font-family:var(--font-display);font-size:1.5rem;color:var(--text);margin-bottom:1.5rem;">
+      ${isEdit ? 'Edit Post' : 'New Dispatch'}
+    </h2>
+    <div class="admin-form" id="postForm">
+      <div class="form-field">
+        <label class="form-label">Title <span>*</span></label>
+        <input class="form-input" type="text" id="pTitle" placeholder="e.g. A Weekend at Blue Tokai Indiranagar" value="${p.title||''}" required />
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label">Category</label>
+          <select class="form-select" id="pCategory">
+            <option value="">Select…</option>
+            ${['Café Visit','Origin Story','Roaster Profile','Recipe Deep-Dive','Musings'].map(c =>
+              `<option ${p.category===c?'selected':''}>${c}</option>`
+            ).join('')}
+          </select>
+        </div>
+        <div class="form-field">
+          <label class="form-label">Date</label>
+          <input class="form-input" type="date" id="pDate" value="${p.date || new Date().toISOString().split('T')[0]}" />
+        </div>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Excerpt <span style="color:var(--text-muted);font-weight:400;">(2–3 sentences)</span></label>
+        <textarea class="form-textarea" id="pExcerpt" style="min-height:70px;" placeholder="A short summary shown on the card…">${p.excerpt||''}</textarea>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Body <span>*</span></label>
+        <textarea class="form-textarea" id="pBody" style="min-height:240px;" placeholder="Write your full post here. Line breaks are preserved.">${p.body||''}</textarea>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Tags <span style="color:var(--text-muted);font-weight:400;">(comma-separated)</span></label>
+        <input class="form-input" type="text" id="pTags" placeholder="e.g. bangalore, filter coffee, single origin" value="${(p.tags||[]).join(', ')}" />
+      </div>
+      <div class="form-field">
+        <label class="form-label">Cover Photo (optional)</label>
+        <div class="form-image-upload" id="pImgUpload">
+          <input type="file" accept="image/*" id="pImgFile" onchange="previewFormImage(this,'pImgPreview','pImgUpload')" />
+          <div class="form-image-upload-label">📷 Click to upload a cover photo</div>
+          ${p.coverImage
+            ? `<img src="${p.coverImage}" class="form-image-preview" id="pImgPreview" style="display:block;" />`
+            : `<img class="form-image-preview" id="pImgPreview" />`}
+        </div>
+      </div>
+      <div class="form-actions">
+        <div class="form-saving" id="pSaving" style="display:none;">✍️ Saving…</div>
+        <button class="btn-secondary" type="button" onclick="closeModal()">Cancel</button>
+        <button class="btn-primary" type="button" onclick="savePost('${isEdit ? p.id : ''}')">
+          ${isEdit ? 'Save Changes' : 'Publish'}
+        </button>
+      </div>
+    </div>
+  `;
+  $('modalOverlay').classList.add('active');
+}
+
+async function savePost(existingId) {
+  const title = $('pTitle').value.trim();
+  const body  = $('pBody').value.trim();
+  if (!title) { showToast('Please enter a title', 'error'); return; }
+  if (!body)  { showToast('Please write the post body', 'error'); return; }
+
+  const tagsRaw = $('pTags').value;
+  const tags = tagsRaw ? tagsRaw.split(',').map(t => t.trim()).filter(Boolean) : [];
+
+  const fileInput = $('pImgFile');
+  let coverImage = existingId ? (state.posts.find(p => p.id === existingId)?.coverImage || null) : null;
+
+  $('pSaving').style.display = 'flex';
+
+  try {
+    const itemId = existingId || slugify(title) + '-' + Date.now().toString(36);
+
+    if (fileInput && fileInput.files[0]) {
+      coverImage = await uploadImageFile(fileInput.files[0], 'posts', itemId);
+    }
+
+    const post = {
+      id:          itemId,
+      title,
+      date:        $('pDate').value || new Date().toISOString().split('T')[0],
+      category:    $('pCategory').value || null,
+      excerpt:     $('pExcerpt').value.trim() || null,
+      body,
+      tags,
+      coverImage
+    };
+
+    const updated = existingId
+      ? state.posts.map(p => p.id === existingId ? post : p)
+      : [...state.posts, post];
+
+    await writeDataFile('posts.json', updated,
+      `✍️ ${existingId ? 'Update' : 'Publish'} dispatch: ${title}`);
+    state.posts = updated;
+    closeModal();
+    renderDispatches();
+    showToast(existingId ? 'Post updated' : 'Published!', 'success');
+  } catch (err) {
+    $('pSaving').style.display = 'none';
+    showToast(err.message, 'error');
+  }
 }
 
 // ---- EVENT LISTENERS ----
@@ -2625,6 +2835,21 @@ document.addEventListener('DOMContentLoaded', () => {
       renderRecipes();
     });
   });
+
+  // Dispatches category filter
+  document.querySelectorAll('.dispatch-filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.dispatch-filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.dispatchFilter = btn.dataset.category;
+      state.pages.dispatches = 1;
+      renderDispatches();
+    });
+  });
+
+  // Add post button
+  const addPostBtn = $('addPostBtn');
+  if (addPostBtn) addPostBtn.addEventListener('click', () => openPostForm());
 
   // Modal close
   $('modalClose').addEventListener('click', closeModal);

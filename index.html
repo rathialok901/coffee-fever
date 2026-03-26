@@ -23,10 +23,11 @@
         </div>
       </div>
       <nav class="main-nav" id="mainNav">
-        <a href="#" class="nav-link" data-section="journal">Cup Notes</a>
+        <a href="#" class="nav-link" data-section="journal">The Pour</a>
         <a href="#" class="nav-link active" data-section="catalog">Coffee</a>
         <a href="#" class="nav-link" data-section="gear">Gear</a>
         <a href="#" class="nav-link" data-section="recipes">Recipes</a>
+        <a href="#" class="nav-link" data-section="dispatches">Dispatches</a>
         <a href="#" class="nav-link admin-only" data-section="spend" style="display:none;">Spend</a>
         <a href="#" class="nav-link admin-only" data-section="insights" style="display:none;">Insights</a>
       </nav>
@@ -55,6 +56,7 @@
 
     <!-- ====== JOURNAL SECTION ====== -->
     <section class="section" id="section-journal">
+      <div class="section-hero pour-hero" aria-hidden="true"></div>
 
       <!-- Stat Strip -->
       <div class="stat-strip" id="statStrip">
@@ -82,8 +84,8 @@
 
       <div class="section-header">
         <div>
-          <h2 class="section-title">Cup Notes</h2>
-          <p class="section-sub">Every cup, documented.</p>
+          <h2 class="section-title">The Pour</h2>
+          <p class="section-sub">Every pour, remembered.</p>
         </div>
         <button class="btn-primary admin-only" id="addJournalBtn" style="display:none;">+ Log a Cup</button>
       </div>
@@ -145,13 +147,14 @@
         <div class="empty-state" id="journalEmpty">
           <div class="empty-icon">📓</div>
           <h3>No entries yet</h3>
-          <p>Your tasting journal is empty. Use admin mode to log your first cup.</p>
+          <p>Your first brew is waiting. Use admin mode to log a cup.</p>
         </div>
       </div>
     </section>
 
     <!-- ====== COFFEE CATALOG SECTION ====== -->
     <section class="section active" id="section-catalog">
+      <div class="section-hero coffee-hero" aria-hidden="true"></div>
       <div class="section-header">
         <div>
           <h2 class="section-title">Coffee</h2>
@@ -228,6 +231,33 @@
         <button class="recipe-filter-btn" data-gear="espresso">Espresso</button>
       </div>
       <div class="recipe-list" id="recipeList"></div>
+    </section>
+
+    <!-- ====== DISPATCHES SECTION ====== -->
+    <section class="section" id="section-dispatches">
+      <div class="section-hero dispatches-hero" aria-hidden="true"></div>
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">Dispatches</h2>
+          <p class="section-sub">Café visits, origin stories, and coffee musings.</p>
+        </div>
+        <button class="btn-primary admin-only" id="addPostBtn" style="display:none;">+ New Post</button>
+      </div>
+      <div class="dispatches-filter-bar" id="dispatchesFilterBar">
+        <button class="dispatch-filter-btn active" data-category="">All</button>
+        <button class="dispatch-filter-btn" data-category="Café Visit">Café Visit</button>
+        <button class="dispatch-filter-btn" data-category="Origin Story">Origin Story</button>
+        <button class="dispatch-filter-btn" data-category="Roaster Profile">Roaster Profile</button>
+        <button class="dispatch-filter-btn" data-category="Recipe Deep-Dive">Recipe Deep-Dive</button>
+        <button class="dispatch-filter-btn" data-category="Musings">Musings</button>
+      </div>
+      <div class="dispatches-grid" id="dispatchesGrid">
+        <div class="empty-state" id="dispatchesEmpty">
+          <div class="empty-icon">✍️</div>
+          <h3>No dispatches yet</h3>
+          <p>Café visits, origin stories, and coffee musings will appear here.</p>
+        </div>
+      </div>
     </section>
 
     <!-- ====== INSIGHTS SECTION (admin only) ====== -->
@@ -316,16 +346,16 @@
       <span class="nav-icon">☕</span><span>Coffee</span>
     </a>
     <a class="bottom-nav-item" data-section="journal" onclick="setSection('journal');updateBottomNav('journal');return false;" href="#">
-      <span class="nav-icon">📓</span><span>Cup Notes</span>
+      <span class="nav-icon">📓</span><span>The Pour</span>
     </a>
     <a class="bottom-nav-item" data-section="gear" onclick="setSection('gear');updateBottomNav('gear');return false;" href="#">
       <span class="nav-icon">⚙️</span><span>Gear</span>
     </a>
+    <a class="bottom-nav-item" data-section="dispatches" onclick="setSection('dispatches');updateBottomNav('dispatches');return false;" href="#">
+      <span class="nav-icon">✍️</span><span>Dispatches</span>
+    </a>
     <a class="bottom-nav-item" data-section="recipes" onclick="setSection('recipes');updateBottomNav('recipes');return false;" href="#">
       <span class="nav-icon">📋</span><span>Recipes</span>
-    </a>
-    <a class="bottom-nav-item" id="bottomNavAdmin" onclick="openAdminPanel();return false;" href="#">
-      <span class="nav-icon" id="bottomNavLockIcon">🔒</span><span>Admin</span>
     </a>
   </nav>
 
