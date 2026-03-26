@@ -378,11 +378,11 @@ function openAdminPanel() {
       $('patStatus').textContent = '✓ Token saved';
       $('patStatus').className = 'admin-pat-status ok';
     }
-    const savedAnthropicKey = localStorage.getItem('cf_anthropic_key');
-    if (savedAnthropicKey) {
-      $('anthropicKeyInput').value = '••••••••••••';
-      $('anthropicKeyStatus').textContent = '✓ Key saved — URL import active';
-      $('anthropicKeyStatus').className = 'admin-pat-status ok';
+    const savedGeminiKey = localStorage.getItem('cf_gemini_key');
+    if (savedGeminiKey) {
+      $('geminiKeyInput').value = '••••••••••••';
+      $('geminiKeyStatus').textContent = '✓ Key saved — AI import active';
+      $('geminiKeyStatus').className = 'admin-pat-status ok';
     }
   } else {
     $('adminLoginSection').style.display = 'block';
@@ -2757,6 +2757,90 @@ function applyImportedDetails(d) {
   return roasterNote;
 }
 
+// Tries multiple CORS proxies in sequence, returns raw HTML string
+async function proxyFetch(url) {
+  const proxies = [
+    async () => {
+      const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+        { signal: AbortSignal.timeout(10000) });
+      if (!r.ok) throw new Error();
+      const j = await r.json();
+      if (!j.contents || j.contents.length < 100) throw new Error();
+      return j.contents;
+    },
+    async () => {
+      const r = await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+        { signal: AbortSignal.timeout(10000) });
+      if (!r.ok) throw new Error();
+      const t = await r.text();
+      if (t.length < 100) throw new Error();
+      return t;
+    },
+    async () => {
+      const r = await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`,
+        { signal: AbortSignal.timeout(10000) });
+      if (!r.ok) throw new Error();
+      const t = await r.text();
+      if (t.length < 100) throw new Error();
+      return t;
+    }
+  ];
+  for (const proxy of proxies) {
+    try { return await proxy(); } catch {}
+  }
+  return null; // all proxies failed — let caller decide next step
+}
+
+// Uses Gemini 1.5 Flash (free tier) to extract coffee details from page content
+async function importWithGemini(rawUrl, html) {
+  const key = localStorage.getItem('cf_gemini_key');
+  if (!key) return null;
+
+  let content;
+  if (html) {
+    const plainText = stripHtml(html).replace(/\s+/g, ' ').substring(0, 6000);
+    content = `Page URL: ${rawUrl}\n\nPage content:\n${plainText}`;
+  } else {
+    content = `Product URL: ${rawUrl}\n\nI couldn't fetch the page content. Use your training knowledge about this product/roaster if available.`;
+  }
+
+  const prompt = `You are a coffee data extractor. Extract product details from this coffee product page and return ONLY a valid JSON object (no markdown, no explanation, no code fences):
+{
+  "name": "product name (without brand prefix)",
+  "roasterName": "roaster or brand name",
+  "origin": "country of origin",
+  "region": "specific region, estate or farm name",
+  "process": "one of: Washed, Natural, Honey, Anaerobic, Wet-Hulled, Pulped Natural",
+  "variety": "coffee variety e.g. SL28, Gesha, Bourbon, S795, Typica",
+  "beanType": "one of: Arabica, Robusta, Liberica, Blend",
+  "roastLevel": "one of: Light, Medium-Light, Medium, Medium-Dark, Dark",
+  "tasteTags": ["array", "of", "flavor", "descriptors"],
+  "description": "brief product description (2-3 sentences max)"
+}
+
+${content}`;
+
+  const r = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+    }
+  );
+
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}));
+    throw new Error(err.error?.message || `Gemini error ${r.status}`);
+  }
+
+  const data = await r.json();
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) return null;
+  return JSON.parse(jsonMatch[0]);
+}
+
 async function importCoffeeFromUrl() {
   const urlInput = $('importUrl');
   const rawUrl = urlInput?.value.trim();
@@ -2771,46 +2855,55 @@ async function importCoffeeFromUrl() {
   try {
     let details = null;
     let source = '';
+    let pageHtml = null;
 
-    // Strategy 1: Shopify JSON endpoint (free, clean, instant)
+    // Strategy 1: Shopify JSON endpoint
     const shopifyUrl = buildShopifyJsonUrl(rawUrl);
     if (shopifyUrl) {
       status.textContent = 'Trying Shopify product data…';
       try {
-        const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(shopifyUrl)}`);
-        if (r.ok) {
-          const payload = await r.json();
-          const parsed = JSON.parse(payload.contents || '{}');
+        const raw = await proxyFetch(shopifyUrl);
+        if (raw) {
+          const parsed = JSON.parse(raw);
           if (parsed.product) { details = parseShopifyProduct(parsed.product); source = 'Shopify'; }
         }
       } catch {}
     }
 
-    // Strategy 2: JSON-LD structured data from page HTML
+    // Strategy 2 & 3: Fetch page HTML → JSON-LD → meta tags
     if (!details) {
-      status.textContent = 'Reading page structured data…';
-      const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(rawUrl)}`);
-      if (!r.ok) throw new Error('Could not fetch the page — check the URL and try again.');
-      const payload = await r.json();
-      const html = payload.contents || '';
-      if (!html) throw new Error('Page returned empty content.');
-
-      details = parseJsonLd(html);
-      if (details) { source = 'JSON-LD'; }
-      else {
-        // Strategy 3: Open Graph / meta tags
-        details = parseMetaTags(html);
-        source = 'meta tags';
+      status.textContent = 'Reading page…';
+      pageHtml = await proxyFetch(rawUrl);
+      if (pageHtml) {
+        details = parseJsonLd(pageHtml);
+        if (details) { source = 'JSON-LD'; }
+        else {
+          details = parseMetaTags(pageHtml);
+          if (details) source = 'meta tags';
+        }
       }
     }
 
-    if (!details) throw new Error('Could not extract coffee details from this page. Try copying the details manually.');
+    // Strategy 4: Gemini AI (free tier, requires key in admin panel)
+    if (!details) {
+      const geminiKey = localStorage.getItem('cf_gemini_key');
+      if (geminiKey) {
+        status.textContent = 'Using Gemini AI to extract details…';
+        const raw = await importWithGemini(rawUrl, pageHtml);
+        if (raw) { details = raw; source = 'Gemini AI'; }
+      }
+    }
+
+    if (!details) {
+      const hasGeminiKey = !!localStorage.getItem('cf_gemini_key');
+      throw new Error(hasGeminiKey
+        ? 'Could not extract coffee details from this page. Try copying the details manually.'
+        : 'Could not extract details automatically. Add a free Gemini API key in the admin panel to enable AI-powered import.');
+    }
 
     const roasterNote = applyImportedDetails(details);
-
     const filledCount = Object.entries(details)
       .filter(([k, v]) => k !== 'tasteTags' ? !!v : v?.length > 0).length;
-
     status.textContent = `✓ Found ${filledCount} details via ${source}. Review and fill in anything missing.${roasterNote}`;
     status.style.color = roasterNote ? 'var(--accent-dark)' : 'var(--green)';
 
@@ -3180,17 +3273,17 @@ document.addEventListener('DOMContentLoaded', () => {
     showToast('GitHub token saved', 'success');
   });
 
-  $('saveAnthropicKeyBtn').addEventListener('click', () => {
-    const key = $('anthropicKeyInput').value.trim();
+  $('saveGeminiKeyBtn').addEventListener('click', () => {
+    const key = $('geminiKeyInput').value.trim();
     if (!key || key === '••••••••••••') {
-      showToast('Please enter your Anthropic API key', 'error');
+      showToast('Please enter your Gemini API key', 'error');
       return;
     }
-    localStorage.setItem('cf_anthropic_key', key);
-    $('anthropicKeyStatus').textContent = '✓ Key saved — URL import active';
-    $('anthropicKeyStatus').className = 'admin-pat-status ok';
-    $('anthropicKeyInput').value = '••••••••••••';
-    showToast('Anthropic key saved', 'success');
+    localStorage.setItem('cf_gemini_key', key);
+    $('geminiKeyStatus').textContent = '✓ Key saved — AI import active';
+    $('geminiKeyStatus').className = 'admin-pat-status ok';
+    $('geminiKeyInput').value = '••••••••••••';
+    showToast('Gemini key saved', 'success');
   });
 
   // Admin section add buttons

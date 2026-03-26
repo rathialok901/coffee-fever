@@ -320,13 +320,13 @@
           <p class="admin-pat-status" id="patStatus"></p>
         </div>
         <div class="admin-pat-section" style="margin-top:1.25rem;">
-          <label class="admin-label">Anthropic API Key (optional)</label>
-          <p class="admin-hint">Powers the "Import from URL" feature — auto-fills coffee details from any roaster's product page.</p>
+          <label class="admin-label">Gemini API Key <span style="font-weight:400;color:var(--text-muted)">(optional — for AI import)</span></label>
+          <p class="admin-hint">Used as a fallback when importing coffee details from a URL. Free key at <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" style="color:var(--accent)">aistudio.google.com</a>.</p>
           <div class="admin-pat-row">
-            <input type="password" class="admin-input" id="anthropicKeyInput" placeholder="sk-ant-api03-…" autocomplete="off" />
-            <button class="btn-secondary" id="saveAnthropicKeyBtn">Save</button>
+            <input type="password" class="admin-input" id="geminiKeyInput" placeholder="AIza…" autocomplete="off" />
+            <button class="btn-secondary" id="saveGeminiKeyBtn">Save</button>
           </div>
-          <p class="admin-pat-status" id="anthropicKeyStatus"></p>
+          <p class="admin-pat-status" id="geminiKeyStatus"></p>
         </div>
         <button class="btn-secondary" id="adminLogoutBtn" style="width:100%;margin-top:1rem;">🔒 Lock Admin Mode</button>
       </div>
