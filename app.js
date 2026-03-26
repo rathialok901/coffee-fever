@@ -669,8 +669,9 @@ function openJournalModal(e) {
     })()}
 
     ${state.adminMode ? `
-      <div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);">
+      <div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);display:flex;gap:0.75rem;flex-wrap:wrap;">
         <button class="btn-secondary" onclick="openJournalForm(window._modalEntry)">✏️ Edit Entry</button>
+        <button class="btn-danger" onclick="deleteJournalEntry(window._modalEntry)">🗑 Delete</button>
       </div>
     ` : ''}
   `;
@@ -884,6 +885,7 @@ function openCoffeeModal(c) {
         ${c.status === 'current'
           ? `<button class="btn-secondary" onclick="markCoffeeStatus(window._modalCoffee,'past')">Mark as Finished</button>`
           : `<button class="btn-secondary" onclick="markCoffeeStatus(window._modalCoffee,'current')">Mark as In Stock</button>`}
+        <button class="btn-danger" onclick="deleteCoffee(window._modalCoffee)">🗑 Delete</button>
       </div>
     ` : ''}
   `;
@@ -908,6 +910,45 @@ async function markCoffeeStatus(coffee, newStatus) {
   } catch (err) {
     showToast(err.message, 'error');
   }
+}
+
+async function deleteJournalEntry(entry) {
+  if (!confirm(`Delete this brew log for "${entry.beanName || 'entry'}"? This cannot be undone.`)) return;
+  const updated = state.journal.filter(e => e.id !== entry.id);
+  try {
+    showToast('Deleting…');
+    await writeDataFile('journal.json', updated, `🗑 Delete journal entry: ${entry.beanName || entry.id}`);
+    state.journal = updated;
+    closeModal();
+    renderJournal();
+    showToast('Entry deleted', 'success');
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+async function deleteCoffee(coffee) {
+  if (!confirm(`Delete "${coffee.name}"? This cannot be undone.`)) return;
+  const updated = state.coffees.filter(c => c.id !== coffee.id);
+  try {
+    showToast('Deleting…');
+    await writeDataFile('coffees.json', updated, `🗑 Delete coffee: ${coffee.name}`);
+    state.coffees = updated;
+    closeModal();
+    renderCatalog();
+    showToast('Coffee deleted', 'success');
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+async function deleteGear(gear) {
+  if (!confirm(`Delete "${gear.name}"? This cannot be undone.`)) return;
+  const updated = state.gear.filter(g => g.id !== gear.id);
+  try {
+    showToast('Deleting…');
+    await writeDataFile('gear.json', updated, `🗑 Delete gear: ${gear.name}`);
+    state.gear = updated;
+    closeModal();
+    renderGear();
+    showToast('Gear deleted', 'success');
+  } catch (err) { showToast(err.message, 'error'); }
 }
 
 // ---- SECTION: ROASTERS ----
@@ -1116,8 +1157,9 @@ function openGearModal(g) {
     ` : ''}
 
     ${state.adminMode ? `
-      <div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);">
+      <div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);display:flex;gap:0.75rem;flex-wrap:wrap;">
         <button class="btn-secondary" onclick="openGearForm(window._modalGear)">✏️ Edit Gear</button>
+        <button class="btn-danger" onclick="deleteGear(window._modalGear)">🗑 Delete</button>
       </div>
     ` : ''}
   `;
