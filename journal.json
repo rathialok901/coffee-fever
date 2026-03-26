@@ -18,12 +18,12 @@
     "waterTemp": "93°C",
     "totalTime": "3:30",
     "scores": {
-      "acidity": 5,
-      "body": 5,
-      "sweetness": 5,
-      "finish": 5
+      "acidity": 4,
+      "body": 2.5,
+      "sweetness": 4,
+      "finish": 6
     },
-    "overallRating": null,
+    "overallRating": 4,
     "tasteTags": [],
     "notes": "",
     "image": null
