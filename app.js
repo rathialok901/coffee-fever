@@ -1501,7 +1501,7 @@ function openCoffeeForm(existing = null) {
     `<option value="${r.id}" ${c.roasterId === r.id ? 'selected' : ''}>${r.name}</option>`
   ).join('');
 
-  const hasAnthropicKey = !!localStorage.getItem('cf_anthropic_key');
+  const hasAnthropicKey = true; // import always available
 
   $('modalBody').innerHTML = `
     <h2 style="font-family:var(--font-display);font-size:1.5rem;color:var(--text);margin-bottom:1.5rem;">
@@ -2554,118 +2554,265 @@ function handleSearch(q) {
 }
 
 // ---- IMPORT COFFEE FROM URL ----
-async function importCoffeeFromUrl() {
-  const url = ($('importUrl') || {}).value?.trim();
-  if (!url) { showToast('Paste a URL first', 'error'); return; }
 
-  const apiKey = localStorage.getItem('cf_anthropic_key');
-  if (!apiKey) { showToast('Add your Anthropic API key in Admin settings first', 'error'); return; }
+// Detection helpers
+const KNOWN_ORIGINS = ['ethiopia','kenya','colombia','brazil','india','guatemala','costa rica',
+  'panama','indonesia','rwanda','burundi','tanzania','peru','mexico','honduras','nicaragua',
+  'el salvador','vietnam','yemen','bolivia','ecuador','china','malawi','zambia','myanmar',
+  'laos','haiti','dominican republic','jamaica','hawaii','coorg','chikmagalur','araku',
+  'wayanad','pulney','bababudan'];
+
+function detectRoastLevel(text) {
+  const t = text.toLowerCase();
+  if (t.includes('medium-light') || t.includes('medium light')) return 'Medium-Light';
+  if (t.includes('medium-dark')  || t.includes('medium dark'))  return 'Medium-Dark';
+  if (t.includes('light roast')  || t.includes('lightly roasted')) return 'Light';
+  if (t.includes('dark roast')   || t.includes('darkly roasted'))  return 'Dark';
+  if (t.includes('medium roast') || t.includes('medium'))          return 'Medium';
+  if (/\blight\b/.test(t)) return 'Light';
+  if (/\bdark\b/.test(t))  return 'Dark';
+  return null;
+}
+
+function detectProcess(text) {
+  const t = text.toLowerCase();
+  if (t.includes('anaerobic'))                             return 'Anaerobic';
+  if (t.includes('wet-hulled') || t.includes('wet hulled') || t.includes('giling basah')) return 'Wet-Hulled';
+  if (t.includes('honey process') || t.includes('honey processed')) return 'Honey';
+  if (t.includes('natural process') || t.includes('naturally processed') || t.includes('dry process')) return 'Natural';
+  if (t.includes('washed process')  || t.includes('fully washed') || t.includes('wet process')) return 'Washed';
+  if (/\bhoney\b/.test(t))   return 'Honey';
+  if (/\bnatural\b/.test(t)) return 'Natural';
+  if (/\bwashed\b/.test(t))  return 'Washed';
+  return null;
+}
+
+function detectBeanType(text) {
+  const t = text.toLowerCase();
+  if (t.includes('robusta'))  return 'Robusta';
+  if (t.includes('liberica')) return 'Liberica';
+  if (t.includes('blend') || t.includes('blended')) return 'Blend';
+  if (t.includes('arabica'))  return 'Arabica';
+  return null;
+}
+
+function detectOrigin(text) {
+  const t = text.toLowerCase();
+  const found = KNOWN_ORIGINS.find(o => t.includes(o));
+  if (!found) return null;
+  return found.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+}
+
+function detectRegion(text) {
+  const t = text.toLowerCase();
+  const regions = ['coorg','chikmagalur','araku','wayanad','pulney','bababudan',
+    'sidama','yirgacheffe','guji','gedeo','nyeri','kirinyaga','huila','nariño',
+    'antioquia','minas gerais','sul de minas','cauca','santa barbara'];
+  const found = regions.find(r => t.includes(r));
+  return found ? found.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : null;
+}
+
+function stripHtml(html) {
+  const div = document.createElement('div');
+  div.innerHTML = html;
+  return (div.textContent || div.innerText || '').replace(/\s+/g, ' ').trim();
+}
+
+function buildShopifyJsonUrl(rawUrl) {
+  try {
+    const u = new URL(rawUrl);
+    if (!u.pathname.includes('/products/')) return null;
+    const handle = u.pathname.split('/products/')[1].split('?')[0].split('/')[0];
+    if (!handle) return null;
+    return `${u.origin}/products/${handle}.json`;
+  } catch { return null; }
+}
+
+function parseShopifyProduct(p) {
+  const allText = [p.title, p.body_html, ...(p.tags || [])].join(' ');
+  const desc = stripHtml(p.body_html || '').slice(0, 400);
+  const price = p.variants?.[0]?.price ? parseFloat(p.variants[0].price) : null;
+
+  // Shopify tags often contain tasting notes — filter out structural ones
+  const structural = new Set(['new','sale','featured','bestseller','subscription','gift','bundle']);
+  const tasteTags = (p.tags || [])
+    .filter(t => {
+      const tl = t.toLowerCase();
+      return !detectRoastLevel(tl) && !detectProcess(tl) && !detectBeanType(tl)
+          && !detectOrigin(tl) && !structural.has(tl) && t.length < 25 && !/^\d/.test(t);
+    })
+    .slice(0, 6);
+
+  return {
+    name:        p.title || null,
+    roasterName: p.vendor || null,
+    origin:      detectOrigin(allText),
+    region:      detectRegion(allText),
+    process:     detectProcess(allText),
+    roastLevel:  detectRoastLevel(allText),
+    beanType:    detectBeanType(allText),
+    variety:     null,
+    description: desc || null,
+    tasteTags,
+    priceINR:    price
+  };
+}
+
+function parseJsonLd(html) {
+  const re = /<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+  let m;
+  while ((m = re.exec(html)) !== null) {
+    try {
+      const raw = JSON.parse(m[1]);
+      const items = Array.isArray(raw) ? raw : (raw['@graph'] || [raw]);
+      const product = items.find(i => {
+        const t = i['@type'];
+        return t === 'Product' || (Array.isArray(t) && t.includes('Product'));
+      });
+      if (!product) continue;
+      const allText = [product.name, product.description, product.keywords].filter(Boolean).join(' ');
+      const price = product.offers?.price ?? product.offers?.[0]?.price ?? null;
+      return {
+        name:        product.name || null,
+        roasterName: product.brand?.name || null,
+        origin:      detectOrigin(allText),
+        region:      detectRegion(allText),
+        process:     detectProcess(allText),
+        roastLevel:  detectRoastLevel(allText),
+        beanType:    detectBeanType(allText),
+        variety:     null,
+        description: (product.description || '').replace(/\s+/g,' ').slice(0, 400) || null,
+        tasteTags:   [],
+        priceINR:    price ? parseFloat(price) : null
+      };
+    } catch {}
+  }
+  return null;
+}
+
+function parseMetaTags(html) {
+  const get = (...props) => {
+    for (const prop of props) {
+      const m = html.match(new RegExp(
+        `<meta[^>]+(?:property|name)=["']${prop}["'][^>]+content=["']([^"'<>]+)["']`, 'i'
+      )) || html.match(new RegExp(
+        `<meta[^>]+content=["']([^"'<>]+)["'][^>]+(?:property|name)=["']${prop}["']`, 'i'
+      ));
+      if (m?.[1]) return m[1].trim();
+    }
+    return null;
+  };
+  const title = get('og:title','twitter:title');
+  if (!title) return null;
+  const desc  = get('og:description','twitter:description','description');
+  const allText = [title, desc].filter(Boolean).join(' ');
+  return {
+    name:        title,
+    roasterName: null,
+    origin:      detectOrigin(allText),
+    region:      detectRegion(allText),
+    process:     detectProcess(allText),
+    roastLevel:  detectRoastLevel(allText),
+    beanType:    detectBeanType(allText),
+    variety:     null,
+    description: desc?.slice(0, 400) || null,
+    tasteTags:   [],
+    priceINR:    null
+  };
+}
+
+function applyImportedDetails(d) {
+  const set = (id, val) => { if (val && $(id)) $(id).value = val; };
+  const sel = (id, val) => {
+    if (!val) return;
+    const el = $(id);
+    if (!el) return;
+    const opt = Array.from(el.options).find(o => o.value === val);
+    if (opt) el.value = val;
+  };
+  set('cName',        d.name);
+  set('cOrigin',      d.origin);
+  set('cRegion',      d.region);
+  set('cVariety',     d.variety);
+  set('cDescription', d.description);
+  if (d.tasteTags?.length) set('cTasteTags', d.tasteTags.join(', '));
+  if (d.priceINR)          set('cCost', d.priceINR);
+  sel('cProcess',    d.process);
+  sel('cRoastLevel', d.roastLevel);
+  sel('cBeanType',   d.beanType);
+
+  let roasterNote = '';
+  if (d.roasterName) {
+    const match = state.roasters.find(r => {
+      const rl = r.name.toLowerCase(), dl = d.roasterName.toLowerCase();
+      return rl.includes(dl) || dl.includes(rl) || rl.split(' ')[0] === dl.split(' ')[0];
+    });
+    if (match) {
+      const sel = $('cRoasterId');
+      if (sel) sel.value = match.id;
+    } else {
+      roasterNote = ` Roaster "${d.roasterName}" not in your list — use + Add new roaster below.`;
+    }
+  }
+  return roasterNote;
+}
+
+async function importCoffeeFromUrl() {
+  const urlInput = $('importUrl');
+  const rawUrl = urlInput?.value.trim();
+  if (!rawUrl) { showToast('Paste a URL first', 'error'); return; }
 
   const btn = $('importUrlBtn');
   const status = $('importUrlStatus');
   btn.disabled = true;
-  btn.textContent = '⏳ Fetching…';
-  status.textContent = 'Fetching page…';
+  btn.textContent = '⏳ Looking up…';
   status.style.color = 'var(--text-muted)';
 
   try {
-    // Step 1: Fetch page HTML via CORS proxy
-    const proxyRes = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
-    if (!proxyRes.ok) throw new Error('Could not fetch the page. Check the URL and try again.');
-    const proxyData = await proxyRes.json();
-    const html = proxyData.contents || '';
-    if (!html) throw new Error('Page returned empty content.');
+    let details = null;
+    let source = '';
 
-    status.textContent = 'Asking Claude to extract details…';
-
-    // Step 2: Ask Claude Haiku to extract coffee details
-    const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 1024,
-        messages: [{
-          role: 'user',
-          content: `Extract coffee product details from this webpage HTML. Return ONLY valid JSON with no markdown fences, no explanation.
-Use null for any field you cannot confidently determine from the page.
-
-JSON format:
-{
-  "name": "coffee name only (not brand name)",
-  "roasterName": "roaster or brand name",
-  "origin": "country of origin",
-  "region": "specific growing region if mentioned, else null",
-  "process": "one of: Washed, Natural, Honey, Anaerobic, Wet-Hulled — or null",
-  "roastLevel": "one of: Light, Medium-Light, Medium, Medium-Dark, Dark — or null",
-  "variety": "coffee cultivar/variety if mentioned, else null",
-  "beanType": "one of: Arabica, Robusta, Liberica, Blend — or null",
-  "description": "product description trimmed to 300 chars",
-  "tasteTags": ["tasting note 1", "tasting note 2"],
-  "priceINR": price_as_number_if_in_rupees_else_null
-}
-
-HTML (first 20000 chars):
-${html.substring(0, 20000)}`
-        }]
-      })
-    });
-
-    if (!claudeRes.ok) {
-      const err = await claudeRes.json().catch(() => ({}));
-      if (claudeRes.status === 401) throw new Error('Invalid Anthropic API key — check it in Admin settings');
-      throw new Error(err.error?.message || `Claude API error: HTTP ${claudeRes.status}`);
+    // Strategy 1: Shopify JSON endpoint (free, clean, instant)
+    const shopifyUrl = buildShopifyJsonUrl(rawUrl);
+    if (shopifyUrl) {
+      status.textContent = 'Trying Shopify product data…';
+      try {
+        const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(shopifyUrl)}`);
+        if (r.ok) {
+          const payload = await r.json();
+          const parsed = JSON.parse(payload.contents || '{}');
+          if (parsed.product) { details = parseShopifyProduct(parsed.product); source = 'Shopify'; }
+        }
+      } catch {}
     }
 
-    const claudeData = await claudeRes.json();
-    const text = claudeData.content?.[0]?.text || '';
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error('Could not parse coffee details from the page.');
-    const d = JSON.parse(jsonMatch[0]);
+    // Strategy 2: JSON-LD structured data from page HTML
+    if (!details) {
+      status.textContent = 'Reading page structured data…';
+      const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(rawUrl)}`);
+      if (!r.ok) throw new Error('Could not fetch the page — check the URL and try again.');
+      const payload = await r.json();
+      const html = payload.contents || '';
+      if (!html) throw new Error('Page returned empty content.');
 
-    // Step 3: Fill in form fields
-    if (d.name)        { const el = $('cName');        if (el) el.value = d.name; }
-    if (d.origin)      { const el = $('cOrigin');      if (el) el.value = d.origin; }
-    if (d.region)      { const el = $('cRegion');      if (el) el.value = d.region; }
-    if (d.variety)     { const el = $('cVariety');     if (el) el.value = d.variety; }
-    if (d.description) { const el = $('cDescription'); if (el) el.value = d.description; }
-    if (d.tasteTags?.length) { const el = $('cTasteTags'); if (el) el.value = d.tasteTags.join(', '); }
-    if (d.priceINR)    { const el = $('cCost');        if (el) el.value = d.priceINR; }
-
-    const selectMatch = (id, val) => {
-      if (!val) return;
-      const sel = $(id);
-      if (!sel) return;
-      const opt = Array.from(sel.options).find(o => o.value === val || o.text === val);
-      if (opt) sel.value = opt.value;
-    };
-    selectMatch('cProcess',    d.process);
-    selectMatch('cRoastLevel', d.roastLevel);
-    selectMatch('cBeanType',   d.beanType);
-
-    // Try to match roaster
-    let roasterMsg = '';
-    if (d.roasterName) {
-      const match = state.roasters.find(r =>
-        r.name.toLowerCase().includes(d.roasterName.toLowerCase()) ||
-        d.roasterName.toLowerCase().includes(r.name.toLowerCase().split(' ')[0])
-      );
-      if (match) {
-        const sel = $('cRoasterId');
-        if (sel) sel.value = match.id;
-        roasterMsg = '';
-      } else {
-        roasterMsg = ` Roaster "${d.roasterName}" not in your list — use + Add new roaster below.`;
+      details = parseJsonLd(html);
+      if (details) { source = 'JSON-LD'; }
+      else {
+        // Strategy 3: Open Graph / meta tags
+        details = parseMetaTags(html);
+        source = 'meta tags';
       }
     }
 
-    status.textContent = '✓ Fields filled! Review everything before saving.' + roasterMsg;
-    status.style.color = 'var(--green)';
+    if (!details) throw new Error('Could not extract coffee details from this page. Try copying the details manually.');
+
+    const roasterNote = applyImportedDetails(details);
+
+    const filledCount = Object.entries(details)
+      .filter(([k, v]) => k !== 'tasteTags' ? !!v : v?.length > 0).length;
+
+    status.textContent = `✓ Found ${filledCount} details via ${source}. Review and fill in anything missing.${roasterNote}`;
+    status.style.color = roasterNote ? 'var(--accent-dark)' : 'var(--green)';
 
   } catch (err) {
     status.textContent = '✗ ' + err.message;
