@@ -121,5 +121,36 @@
     ],
     "notes": "",
     "image": null
+  },
+  {
+    "id": "entry-1774584127817-4mxa",
+    "date": "2026-03-27",
+    "coffeeId": "coorg-naturals",
+    "beanName": "Coorg Naturals",
+    "roasterId": "humble-bean",
+    "roasterName": "Humble Bean",
+    "origin": "Chikmagalur",
+    "roastLevel": "Medium",
+    "brewMethod": "V60 / Pour Over",
+    "grindClicks": 38,
+    "grindLabel": "Medium",
+    "dose": "15g",
+    "water": "250ml",
+    "ratio": null,
+    "waterTemp": "95°C",
+    "totalTime": "4:20",
+    "scores": {
+      "acidity": 5,
+      "body": 5,
+      "sweetness": 5,
+      "finish": 5
+    },
+    "overallRating": 3,
+    "tasteTags": [
+      "Fruity",
+      "Nutty"
+    ],
+    "notes": "",
+    "image": null
   }
 ]
