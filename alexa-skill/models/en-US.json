@@ -1,0 +1,157 @@
+{
+  "interactionModel": {
+    "languageModel": {
+      "invocationName": "coffee fever",
+      "intents": [
+        {
+          "name": "AMAZON.CancelIntent",
+          "samples": ["cancel", "never mind", "forget it"]
+        },
+        {
+          "name": "AMAZON.HelpIntent",
+          "samples": ["help", "what can I say", "how does this work"]
+        },
+        {
+          "name": "AMAZON.StopIntent",
+          "samples": ["stop", "exit", "quit", "goodbye"]
+        },
+        {
+          "name": "AMAZON.YesIntent",
+          "samples": ["yes", "yeah", "yep", "sure", "correct", "save it", "log it", "confirm"]
+        },
+        {
+          "name": "AMAZON.NoIntent",
+          "samples": ["no", "nope", "cancel it", "don't save", "discard"]
+        },
+        {
+          "name": "AMAZON.FallbackIntent",
+          "samples": []
+        },
+        {
+          "name": "LogBrewIntent",
+          "slots": [],
+          "samples": [
+            "log a brew",
+            "log a coffee",
+            "add a brew",
+            "record a brew",
+            "log my coffee",
+            "start logging",
+            "track a brew",
+            "I want to log a coffee"
+          ]
+        },
+        {
+          "name": "BrewerIntent",
+          "slots": [
+            {
+              "name": "brewer",
+              "type": "BrewerType"
+            }
+          ],
+          "samples": [
+            "{brewer}",
+            "I used {brewer}",
+            "on the {brewer}",
+            "using {brewer}",
+            "I made it with {brewer}"
+          ]
+        },
+        {
+          "name": "RatingIntent",
+          "slots": [
+            {
+              "name": "rating",
+              "type": "AMAZON.NUMBER"
+            }
+          ],
+          "samples": [
+            "{rating}",
+            "{rating} out of five",
+            "{rating} stars",
+            "I give it a {rating}",
+            "rating {rating}",
+            "I'd say {rating}"
+          ]
+        },
+        {
+          "name": "UserInputIntent",
+          "slots": [
+            {
+              "name": "userInput",
+              "type": "AMAZON.SearchQuery"
+            }
+          ],
+          "samples": [
+            "{userInput}"
+          ]
+        },
+        {
+          "name": "SkipIntent",
+          "slots": [],
+          "samples": [
+            "skip",
+            "no notes",
+            "nothing",
+            "none",
+            "pass",
+            "no additional notes",
+            "nothing to add",
+            "that's all",
+            "no flavour notes"
+          ]
+        }
+      ],
+      "types": [
+        {
+          "name": "BrewerType",
+          "values": [
+            {
+              "name": {
+                "value": "V60",
+                "synonyms": ["pour over", "V sixty", "hario V sixty", "hario", "pourover"]
+              }
+            },
+            {
+              "name": {
+                "value": "French Press",
+                "synonyms": ["french press", "plunger", "cafetiere", "press pot", "french"]
+              }
+            },
+            {
+              "name": {
+                "value": "Clever Dripper",
+                "synonyms": ["clever", "the clever", "clever dripper"]
+              }
+            },
+            {
+              "name": {
+                "value": "Moka Pot",
+                "synonyms": ["moka", "stovetop", "moka pot", "bialetti", "stove top"]
+              }
+            },
+            {
+              "name": {
+                "value": "South Indian Filter",
+                "synonyms": [
+                  "filter kaapi",
+                  "south indian",
+                  "indian filter",
+                  "filter coffee",
+                  "kaapi",
+                  "filter"
+                ]
+              }
+            },
+            {
+              "name": {
+                "value": "Espresso",
+                "synonyms": ["espresso machine", "espresso", "shot", "machine"]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

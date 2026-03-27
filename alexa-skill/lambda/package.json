@@ -1,0 +1,10 @@
+{
+  "name": "coffee-fever-alexa",
+  "version": "1.0.0",
+  "description": "Alexa skill for Coffee Fever brew logging",
+  "main": "index.js",
+  "dependencies": {
+    "ask-sdk-core": "^2.14.0",
+    "ask-sdk-model": "^1.89.0"
+  }
+}
