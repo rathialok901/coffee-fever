@@ -33,7 +33,9 @@
       "full body",
       "manual"
     ],
-    "image": null
+    "cost": null,
+    "dateAdded": null,
+    "image": "images/gear/french-press.png"
   },
   {
     "id": "moka-pot",
