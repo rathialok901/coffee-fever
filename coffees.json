@@ -83,7 +83,7 @@
     "cost": null,
     "roastDate": "2026-03-23",
     "dialInNotes": null,
-    "bagOpened": false,
+    "bagOpened": true,
     "image": null
   }
 ]
