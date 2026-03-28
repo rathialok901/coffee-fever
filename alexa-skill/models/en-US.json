@@ -83,7 +83,18 @@
             }
           ],
           "samples": [
-            "{userInput}"
+            "I used {userInput}",
+            "I brewed {userInput}",
+            "it was {userInput}",
+            "the {userInput}",
+            "I'd say {userInput}",
+            "I taste {userInput}",
+            "it tastes like {userInput}",
+            "flavours of {userInput}",
+            "notes of {userInput}",
+            "something like {userInput}",
+            "add note {userInput}",
+            "it's {userInput}"
           ]
         },
         {

@@ -195,8 +195,8 @@ async function startLoggingFlow(handlerInput) {
     : `Welcome to Coffee Fever! I found ${inStock.length} coffees in stock: ${list}.`;
 
   return responseBuilder
-    .speak(`${intro} Which one did you use today?`)
-    .reprompt('Which coffee did you brew?')
+    .speak(`${intro} Which one did you use today? Say "I used" followed by the name.`)
+    .reprompt('Say "I used" followed by the coffee name.')
     .getResponse();
 }
 
@@ -222,8 +222,8 @@ const ConversationHandler = {
       if (!match) {
         const list = coffees.map(c => c.name).join(', ');
         return responseBuilder
-          .speak(`Sorry, I didn't catch that. Your coffees in stock are: ${list}. Which one did you use?`)
-          .reprompt('Which coffee did you brew today?')
+          .speak(`Sorry, I didn't catch that. Your coffees in stock are: ${list}. Say "I used" followed by the name.`)
+          .reprompt('Say "I used" followed by the coffee name.')
           .getResponse();
       }
 
@@ -283,8 +283,8 @@ const ConversationHandler = {
       attributesManager.setSessionAttributes(attrs);
 
       return responseBuilder
-        .speak(`${num} out of 5. Any flavour notes? Say things like chocolate, fruity, or cardamom. Or say skip.`)
-        .reprompt('Any flavour notes? Or say skip.')
+        .speak(`${num} out of 5. Any flavour notes? Say "I taste" followed by your notes, for example "I taste chocolate and cardamom". Or say skip.`)
+        .reprompt('Say "I taste" followed by your notes, or say skip.')
         .getResponse();
     }
 
@@ -304,8 +304,8 @@ const ConversationHandler = {
       attributesManager.setSessionAttributes(attrs);
 
       return responseBuilder
-        .speak('Any extra notes — grind setting, brew time, or anything else? Or say skip.')
-        .reprompt('Extra notes, or say skip.')
+        .speak('Any extra notes? Say "add note" followed by your note, for example "add note slightly over-extracted". Or say skip.')
+        .reprompt('Say "add note" followed by your note, or say skip.')
         .getResponse();
     }
 
