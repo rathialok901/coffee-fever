@@ -61,53 +61,5 @@
     "dialInNotes": "7-3-7-4 for v60",
     "bagOpened": true,
     "image": null
-  },
-  {
-    "id": "dunduga-estate-washed-naivo-coffee-company",
-    "name": "Dunduga Estate Washed - Naivo Coffee Company",
-    "roasterId": "navio",
-    "origin": "India",
-    "region": "",
-    "roastLevel": "",
-    "process": "Washed",
-    "variety": "",
-    "beanType": null,
-    "status": "current",
-    "dateAdded": "2026-03-28",
-    "dateFinished": null,
-    "tasteTags": [
-      "Malt",
-      "Tobacco"
-    ],
-    "description": "A rich, bold and smoky coffee with a memorable profile that is perfect for brewing with Electric Drip Filter, Moka Pot and South Indian Filter.",
-    "cost": null,
-    "roastDate": "2026-03-23",
-    "dialInNotes": null,
-    "bagOpened": true,
-    "image": null
-  },
-  {
-    "id": "dunduga-estate-washed-naivo-coffee-company",
-    "name": "Dunduga Estate Washed - Naivo Coffee Company",
-    "roasterId": "navio",
-    "origin": "India",
-    "region": "",
-    "roastLevel": "",
-    "process": "Washed",
-    "variety": "",
-    "beanType": null,
-    "status": "current",
-    "dateAdded": "2026-03-28",
-    "dateFinished": null,
-    "tasteTags": [
-      "Malt",
-      "Tobacco"
-    ],
-    "description": "A rich, bold and smoky coffee with a memorable profile that is perfect for brewing with Electric Drip Filter, Moka Pot and South Indian Filter.",
-    "cost": null,
-    "roastDate": "2026-03-23",
-    "dialInNotes": null,
-    "bagOpened": true,
-    "image": null
   }
 ]
