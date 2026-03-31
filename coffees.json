@@ -85,5 +85,29 @@
     "dialInNotes": null,
     "bagOpened": true,
     "image": null
+  },
+  {
+    "id": "dark-room-naturals",
+    "name": "Dark Room Naturals",
+    "roasterId": "coffeeverse",
+    "origin": "",
+    "region": "",
+    "roastLevel": "Dark",
+    "process": "",
+    "variety": "",
+    "beanType": null,
+    "status": "current",
+    "dateAdded": "2026-03-18",
+    "dateFinished": null,
+    "tasteTags": [
+      "Guava",
+      "Blueberry"
+    ],
+    "description": "This lot features a unique coffee processing method, starting with thermal shock applied to the cherries to enhance sugar readiness for fermentation. The cherries are then fermented for 48 hours with lactic acid bacteria (LAB) to ensure balanced acidity and optimal flavor development. After fermentation, they are dried in a dark room for 12 days, minimizing UV degradation and preserving their comp",
+    "cost": 1100,
+    "roastDate": "2026-03-12",
+    "dialInNotes": null,
+    "bagOpened": false,
+    "image": null
   }
 ]
